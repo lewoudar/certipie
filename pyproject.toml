@@ -2,8 +2,20 @@
 name = "certipie"
 version = "0.1.0"
 description = "A tool to create csr and auto-certificate"
-authors = ["le_woudar <kevin.tewouda@gandi.net>"]
-license = "Apache 2"
+authors = ["le_woudar <lewoudar@gmail.com>"]
+license = "Apache-2.0"
+
+classifiers = [
+    "Intended Audience :: Developers",
+    "Framework :: FastAPI",
+    "Topic :: Security :: Cryptography",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: Implementation :: PyPy"
+]
+
+packages = [
+    { include = "certipie" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
