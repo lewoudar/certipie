@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Optional
 
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, load_pem_private_key
+from fastapi import File, Form, Depends
+from pydantic import SecretBytes
 
 from .schemas import PrivateKeyInput
 
@@ -16,6 +18,31 @@ def delete_tmp_dir(tmp_dir: str) -> None:
 
 def get_pk_info(pk_info: Optional[PrivateKeyInput] = None) -> PrivateKeyInput:
     return pk_info if pk_info is not None else PrivateKeyInput()
+
+
+def get_passphrase(
+        passphrase: Optional[SecretBytes] = Form(
+            b'',
+            description='passphrase used to encrypt the private key. Can be optional.',
+            example='secret passphrase'
+        ),
+) -> bytes:
+    return passphrase if isinstance(passphrase, bytes) else passphrase.get_secret_value()
+
+
+def get_private_key(
+        passphrase: bytes = Depends(get_passphrase),
+        private_key: Optional[bytes] = File(
+            None,
+            description=(
+                    'The private key used to generate the certificate signing request. If not provided, an RSA key '
+                    'will be created (without passphrase) and returned in the response.'
+            )
+        )
+) -> Optional[rsa.RSAPrivateKey]:
+    if private_key is None:
+        return
+    return load_pem_private_key(private_key, passphrase or None)
 
 
 def create_public_key(tmp_path: Path, private_key: rsa.RSAPrivateKey, pk_info: PrivateKeyInput) -> Path:
