@@ -99,7 +99,7 @@ def _get_private_key(
     if isinstance(private_key, PrivateKey):
         return private_key  # type: ignore
     else:
-        return load_pem_private_key(private_key.read_bytes(), passphrase)
+        return load_pem_private_key(private_key.read_bytes(), passphrase or None)
 
 
 @validate_arguments(config={'arbitrary_types_allowed': True})

@@ -224,6 +224,19 @@ class TestCreateCsr:
         assert csr.subject.rfc4514_string() == f'CN={domain},O=organization,L=Paris,ST=Ile-de-France,C=FR'
         assert csr.attributes[0].value.endswith(idna.encode(domain))
 
+    def test_should_create_csr_given_private_key_and_no_passphrase(self, tmp_path):
+        key = tmp_path / 'key.pem'
+        csr_path = tmp_path / 'csr.pem'
+        create_private_key(f'{key}')
+        domain = 'site.com'
+        csr = create_csr(
+            f'{csr_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
+            private_key=key
+        )
+
+        assert csr_path.read_text().startswith('-----BEGIN CERTIFICATE REQUEST-----')
+        assert csr.subject.rfc4514_string() == f'CN={domain},O=organization,L=Paris,ST=Ile-de-France,C=FR'
+
     def test_should_create_csr_without_giving_private_key(self, tmp_path, mocker):
         mocker.patch('uuid.uuid4', return_value='3c44c151-b6bb-4953-b058-9506e2065890')
         csr_path = tmp_path / 'csr.pem'
@@ -276,7 +289,7 @@ class TestCreateAutoCertificate:
     @pytest.mark.parametrize('name', [b'foo', 4])
     def test_should_raise_error_when_filename_is_not_a_string(self, name):
         with pytest.raises(ValidationError) as exc_info:
-            create_auto_certificate(name, 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com')
+            create_auto_certificate(name, 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com')  # type: ignore
 
         message = str(exc_info.value)
         assert 'filename' in message
@@ -319,7 +332,7 @@ class TestCreateAutoCertificate:
 
     def test_should_raise_error_when_common_name_is_not_a_string(self):
         with pytest.raises(ValidationError) as exc_info:
-            create_auto_certificate('cert.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 4)
+            create_auto_certificate('cert.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 4)  # type: ignore
 
         message = str(exc_info.value)
         assert 'common_name' in message
@@ -426,6 +439,19 @@ class TestCreateAutoCertificate:
         cert = create_auto_certificate(
             f'{cert_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
             private_key=private_key, passphrase=passphrase
+        )
+
+        self.assert_certificate(cert_path, cert, domain)
+
+    def test_should_create_certificate_given_private_key_and_no_passphrase(self, tmp_path):
+        domain = 'site.com'
+        key = tmp_path / 'key.pem'
+        cert_path = tmp_path / 'cert.pem'
+        create_private_key(f'{key}')
+
+        cert = create_auto_certificate(
+            f'{cert_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
+            private_key=key
         )
 
         self.assert_certificate(cert_path, cert, domain)
