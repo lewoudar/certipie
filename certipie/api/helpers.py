@@ -1,6 +1,7 @@
 """Some helper functions."""
 import shutil
 import zipfile
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -43,6 +44,17 @@ def get_private_key(
     if private_key is None:
         return
     return load_pem_private_key(private_key, passphrase or None)
+
+
+def get_date_end(
+        end_validity: int = Form(
+            365,
+            description='The number of days the certificate will be valid.',
+            gt=0,
+            example=365
+        )
+) -> datetime:
+    return datetime.utcnow() + timedelta(days=end_validity)
 
 
 def create_public_key(tmp_path: Path, private_key: rsa.RSAPrivateKey, pk_info: PrivateKeyInput) -> Path:

@@ -1,5 +1,7 @@
+from functools import partial
 from typing import Optional
 
+from fastapi import Form
 from pydantic import BaseModel, Field, SecretBytes
 
 from certipie.core import is_domain_name
@@ -33,3 +35,9 @@ class DomainName(str):
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
+
+
+country_form = partial(Form, description='Two letter code of your country', example='FR', min_length=2, max_length=2)
+state_or_province_form = partial(Form, description='the state or province information', example='Ile-de-France')
+city_form = partial(Form, description='the city information', example='Paris')
+organization_form = partial(Form, description='the organization information', example='Organization Inc.')

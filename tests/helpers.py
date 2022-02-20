@@ -17,3 +17,12 @@ def assert_csr(paths: list[Path], prefix='csr') -> None:
         else:
             assert path.stem == prefix
             assert path.read_text().startswith('-----BEGIN CERTIFICATE REQUEST-----')
+
+
+def assert_cert(paths: list[Path], prefix='cert') -> None:
+    for path in paths:
+        if 'key' in path.name:
+            assert path.read_text().startswith('-----BEGIN RSA PRIVATE KEY-----')
+        else:
+            assert path.stem == prefix
+            assert path.read_text().startswith('-----BEGIN CERTIFICATE-----')

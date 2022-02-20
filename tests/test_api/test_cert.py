@@ -1,7 +1,7 @@
 import pytest
 
 from certipie.core import create_private_key
-from tests.helpers import assert_private_key, assert_csr
+from tests.helpers import assert_private_key, assert_csr, assert_cert
 
 
 class TestPrivateKey:
@@ -73,17 +73,18 @@ def base_payload() -> dict:
     }
 
 
-class TestCsr:
-    """Tests route POST /certs/csr"""
+class TestCommonCertificateError:
+    """This class tests common validation errors for routes POST /certs/csr and POST /certs/auto-certificate."""
 
     @pytest.mark.parametrize('field', [
         'state_or_province',
         'city',
         'organization'
     ])
-    def test_should_return_error_when_mandatory_field_is_empty(self, client, base_payload, field):
+    @pytest.mark.parametrize('url_path', ['csr', 'auto-certificate'])
+    def test_should_return_error_when_mandatory_field_is_empty(self, client, base_payload, field, url_path):
         base_payload[field] = ''
-        r = client.post('/certs/csr', data=base_payload)
+        r = client.post(f'/certs/{url_path}', data=base_payload)
 
         assert r.status_code == 422
         assert r.json() == {
@@ -97,9 +98,12 @@ class TestCsr:
         }
 
     @pytest.mark.parametrize('country', ['C', 'CAM'])
-    def test_should_return_error_when_country_has_a_length_different_to_two(self, client, base_payload, country):
+    @pytest.mark.parametrize('url_path', ['csr', 'auto-certificate'])
+    def test_should_return_error_when_country_has_a_length_different_to_two(
+            self, client, base_payload, country, url_path
+    ):
         base_payload['country'] = country
-        r = client.post('/certs/csr', data=base_payload)
+        r = client.post(f'/certs/{url_path}', data=base_payload)
 
         assert r.status_code == 422
         adjective = 'least' if country == 'C' else 'most'
@@ -116,20 +120,45 @@ class TestCsr:
         }
 
     @pytest.mark.parametrize('domain', ['4', 'foo'])
-    def test_should_return_error_when_common_name_is_not_a_domain_name(self, client, base_payload, domain):
+    @pytest.mark.parametrize('url_path', ['csr', 'auto-certificate'])
+    def test_should_return_error_when_common_name_is_not_a_domain_name(self, client, base_payload, domain, url_path):
         base_payload['common_name'] = domain
-        r = client.post('/certs/csr', data=base_payload)
+        r = client.post(f'/certs/{url_path}', data=base_payload)
+
+        errors = [
+            {
+                'ctx': {'given': f'{domain}', 'permitted': ['localhost']},
+                'loc': ['body', 'common_name'],
+                'msg': "unexpected value; permitted: 'localhost'",
+                'type': 'value_error.const'
+            },
+            {
+                'loc': ['body', 'common_name'],
+                'msg': 'not a valid domain name',
+                'type': 'value_error'
+            }
+        ]
+        if url_path == 'csr':
+            del errors[0]
 
         assert r.status_code == 422
-        assert r.json() == {
-            'detail': [
-                {
-                    'loc': ['body', 'common_name'],
-                    'msg': 'not a valid domain name',
-                    'type': 'value_error'
-                }
-            ]
-        }
+        assert r.json() == {'detail': errors}
+
+    @pytest.mark.parametrize('url_path', ['csr', 'auto-certificate'])
+    def test_should_return_error_when_provided_private_key_is_incorrect(
+            self, tmp_path, client, base_payload, url_path
+    ):
+        fake_key = tmp_path / 'key.pem'
+        fake_key.write_text('hello world!')
+
+        with open(fake_key, 'rb') as f:
+            r = client.post(f'/certs/{url_path}', files={'private_key': f}, data=base_payload)
+
+        assert r.status_code == 422
+
+
+class TestCsr:
+    """Tests route POST /certs/csr"""
 
     @pytest.mark.parametrize('domain', ['4', 'foo'])
     def test_should_return_error_when_alternative_name_is_not_a_domain_name(self, client, base_payload, domain):
@@ -146,15 +175,6 @@ class TestCsr:
                 }
             ]
         }
-
-    def test_should_return_error_when_provided_private_key_is_incorrect(self, tmp_path, client, base_payload):
-        fake_key = tmp_path / 'key.pem'
-        fake_key.write_text('hello world!')
-
-        with open(fake_key, 'rb') as f:
-            r = client.post('/certs/csr', files={'private_key': f}, data=base_payload)
-
-        assert r.status_code == 422
 
     @pytest.mark.parametrize('default_filename', [True, False])
     @pytest.mark.parametrize('default_alternative_names', [True, False])
@@ -206,3 +226,95 @@ class TestCsr:
         paths = unzip_file(r.content, tmp_path)
         assert len(paths) == 1
         assert_csr(paths, 'my_csr')
+
+
+class TestAutoCertificate:
+    """Tests route POST /certs/auto-certificate"""
+
+    @pytest.mark.parametrize('domain', ['4', 'foo'])
+    def test_should_return_error_when_alternative_name_is_not_a_domain_name(self, client, base_payload, domain):
+        base_payload['alternative_names'] = ['site.com', domain, 'foo.com']
+        r = client.post('/certs/auto-certificate', data=base_payload)
+
+        assert r.status_code == 422
+        assert r.json() == {
+            'detail': [
+                {'loc': ['body', 'alternative_names', 1], 'msg': 'not a valid domain name', 'type': 'value_error'},
+                {'loc': ['body', 'alternative_names', 1], 'msg': 'value is not a valid IPv4 address',
+                 'type': 'value_error.ipv4address'},
+                {'loc': ['body', 'alternative_names', 1], 'msg': 'value is not a valid IPv6 address',
+                 'type': 'value_error.ipv6address'},
+                {'loc': ['body', 'alternative_names', 1], 'msg': 'value is not a valid IPv4 network',
+                 'type': 'value_error.ipv4network'},
+                {'loc': ['body', 'alternative_names', 1], 'msg': 'value is not a valid IPv6 network',
+                 'type': 'value_error.ipv6network'},
+                {'loc': ['body', 'alternative_names', 1], 'msg': "unexpected value; permitted: 'localhost'",
+                 'type': 'value_error.const', 'ctx': {'given': f'{domain}', 'permitted': ['localhost']}}
+            ]
+        }
+
+    @pytest.mark.parametrize('value', [-1, 'foo'])
+    def test_should_return_error_when_end_validity_is_not_a_valid_integer(self, client, base_payload, value):
+        base_payload['end_validity'] = value
+        r = client.post('/certs/auto-certificate', data=base_payload)
+
+        assert r.status_code == 422
+
+        detail = r.json()['detail']
+        assert len(detail) == 1
+        assert detail[0]['loc'] == ['body', 'end_validity']
+
+    @pytest.mark.parametrize('common_name', ['localhost', 'site.com'])
+    def test_should_return_zipfile_without_given_filename_prefix(
+            self, tmp_path, client, unzip_file, base_payload, common_name
+    ):
+        base_payload.pop('filename_prefix')
+        base_payload['common_name'] = common_name
+        r = client.post('/certs/auto-certificate', data=base_payload)
+
+        assert r.status_code == 200
+        assert r.headers['content-type'] == 'application/zip'
+
+        paths = unzip_file(r.content, tmp_path)
+        assert_cert(paths)
+
+    def test_should_return_zipfile_without_given_alternative_names(self, tmp_path, client, unzip_file, base_payload):
+        base_payload.pop('alternative_names')
+        base_payload['filename_prefix'] = 'cert'
+        r = client.post('/certs/auto-certificate', data=base_payload)
+
+        assert r.status_code == 200
+        assert r.headers['content-type'] == 'application/zip'
+
+        paths = unzip_file(r.content, tmp_path)
+        assert_cert(paths)
+
+    def test_should_return_zipfile_with_given_private_key_and_passphrase(
+            self, tmp_path, client, private_key, unzip_file, base_payload
+    ):
+        base_payload['filename_prefix'] = 'cert'
+        with open(private_key, 'rb') as f:
+            base_payload['passphrase'] = 'passphrase'
+            r = client.post('/certs/auto-certificate', files={'private_key': f}, data=base_payload)
+
+        assert r.status_code == 200
+        assert r.headers['content-type'] == 'application/zip'
+
+        paths = unzip_file(r.content, tmp_path)
+        assert_cert(paths)
+
+    def test_should_return_zipfile_with_given_private_key_and_no_passphrase(
+            self, tmp_path, client, unzip_file, base_payload
+    ):
+        key = tmp_path / 'key.pem'
+        create_private_key(f'{key}')
+        base_payload['filename_prefix'] = 'certificate'
+
+        with key.open('rb') as f:
+            r = client.post('/certs/auto-certificate', files={'private_key': f}, data=base_payload)
+
+        assert r.status_code == 200
+        assert r.headers['content-type'] == 'application/zip'
+
+        paths = unzip_file(r.content, tmp_path)
+        assert_cert(paths, 'certificate')
