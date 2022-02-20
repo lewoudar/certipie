@@ -6,11 +6,12 @@ from pathlib import Path
 from typing import Optional
 
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, load_pem_private_key
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from fastapi import File, Form, Depends
 from pydantic import SecretBytes
 
 from .schemas import PrivateKeyInput
+from ..core import get_public_key_from_private_key
 
 
 def delete_tmp_dir(tmp_dir: str) -> None:
@@ -59,8 +60,7 @@ def get_date_end(
 
 def create_public_key(tmp_path: Path, private_key: rsa.RSAPrivateKey, pk_info: PrivateKeyInput) -> Path:
     public_key_path = tmp_path / f'{pk_info.filename_prefix}.pub'
-    with public_key_path.open('wb') as f:
-        f.write(private_key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo))
+    get_public_key_from_private_key(public_key_path, private_key)
 
     return public_key_path
 

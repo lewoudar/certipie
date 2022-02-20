@@ -10,7 +10,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import (
-    load_pem_private_key, Encoding, PrivateFormat, BestAvailableEncryption, NoEncryption
+    load_pem_private_key, Encoding, PrivateFormat, BestAvailableEncryption, NoEncryption, PublicFormat
 )
 from cryptography.x509 import CertificateSigningRequest, Certificate
 from cryptography.x509.oid import NameOID
@@ -39,6 +39,12 @@ def create_private_key(
         ))
 
     return key
+
+
+@validate_arguments(config={'arbitrary_types_allowed': True})
+def get_public_key_from_private_key(file_path: Path, private_key: rsa.RSAPrivateKey) -> None:
+    with file_path.open('wb') as f:
+        f.write(private_key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo))
 
 
 # shamefully copied from the validators library

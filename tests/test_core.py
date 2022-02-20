@@ -8,7 +8,9 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import CertificateSigningRequest, RFC822Name, IPAddress, DNSName, Certificate
 from pydantic import ValidationError
 
-from certipie.core import create_private_key, create_csr, normalize_alternative_name, create_auto_certificate
+from certipie.core import (
+    create_private_key, get_public_key_from_private_key, create_csr, normalize_alternative_name, create_auto_certificate
+)
 
 
 class TestCreatePrivateKey:
@@ -54,6 +56,17 @@ class TestCreatePrivateKey:
         assert private_key.is_file()
         assert private_key.read_text().startswith('-----BEGIN RSA PRIVATE KEY-----')
         assert isinstance(key, rsa.RSAPrivateKey)
+
+
+class TestGetPublicKeyFromPrivateKey:
+    """Tests function get_public_key_from_private_key"""
+
+    def test_should_create_public_key_given_file_path_and_private_key(self, tmp_path, private_key):
+        public_key = tmp_path / 'id_rsa.pub'
+        private_key = load_pem_private_key(private_key.read_bytes(), b'passphrase')
+        get_public_key_from_private_key(public_key, private_key)
+
+        assert public_key.read_text().startswith('-----BEGIN PUBLIC KEY-----')
 
 
 class TestCreateCsr:
