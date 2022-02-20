@@ -54,6 +54,6 @@ def create_public_key(tmp_path: Path, private_key: rsa.RSAPrivateKey, pk_info: P
 
 
 def create_zipfile(zip_path: Path, path_list: list[Path]) -> None:
-    with zipfile.ZipFile(f'{zip_path}', 'w') as my_zip:
+    with zipfile.ZipFile(f'{zip_path}', 'w', compression=zipfile.ZIP_DEFLATED) as my_zip:
         for path in path_list:
-            my_zip.write(str(path))
+            my_zip.write(str(path), path.name)

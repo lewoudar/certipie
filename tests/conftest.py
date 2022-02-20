@@ -1,7 +1,5 @@
-import shutil
 import zipfile
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from fastapi.testclient import TestClient
@@ -28,10 +26,10 @@ def client() -> Session:
 @pytest.fixture()
 def unzip_file():
     """Helper to unzip a zip file and returns a list of paths corresponding to the files inside the zip."""
-    dir_path: Optional[Path] = None
+    to_delete: list[Path] = []
 
     def _unzip_file(content: bytes, tmp_path: Path) -> list[Path]:
-        nonlocal dir_path
+        nonlocal to_delete
         paths = []
         filename = tmp_path / 'file.zip'
         with filename.open('wb') as archive:
@@ -41,10 +39,11 @@ def unzip_file():
             for file in my_zip.namelist():
                 my_zip.extract(file)
                 paths.append(Path(file))
-            # don't forget to set the root path of created files for deletion
-            dir_path = paths[0].parents[1]
+            # don't forget to save a reference to the list to delete files after
+            to_delete = paths[:]
             return paths
 
     yield _unzip_file
 
-    shutil.rmtree(dir_path)
+    for path in to_delete:
+        path.unlink()
