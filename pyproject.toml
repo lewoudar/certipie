@@ -25,6 +25,7 @@ cryptography = "^36.0.1"
 hypercorn = "^0.13.2"
 idna = "^3.3"
 python-multipart = "^0.0.5"
+click-didyoumean = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.0"
@@ -34,6 +35,9 @@ flake8 = "^4.0.1"
 pytest-mock = "^3.7.0"
 requests = "^2.27.1"
 httpie = "^3.0.2"
+
+[tool.poetry.scripts]
+cert = "certipie.cli.main:cert"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
