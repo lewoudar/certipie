@@ -2,6 +2,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 from fastapi.testclient import TestClient
 from requests import Session
 
@@ -47,3 +48,16 @@ def unzip_file():
 
     for path in to_delete:
         path.unlink()
+
+
+@pytest.fixture()
+def runner():
+    """CLI test runner"""
+    return CliRunner()
+
+
+@pytest.fixture()
+def isolated_path(runner) -> Path:
+    """Returns a path corresponding to an isolated folder suitable for file testing."""
+    with runner.isolated_filesystem() as d:
+        yield Path(d)
