@@ -12,6 +12,7 @@ from pydantic import SecretBytes
 
 from .schemas import PrivateKeyInput
 from ..core import get_public_key_from_private_key
+from ..types import PrivateKey
 
 
 def delete_tmp_dir(tmp_dir: str) -> None:
@@ -41,7 +42,7 @@ def get_private_key(
                     'will be created (without passphrase) and returned in the response.'
             )
         )
-) -> Optional[rsa.RSAPrivateKey]:
+) -> Optional[PrivateKey]:
     if private_key is None:
         return
     return load_pem_private_key(private_key, passphrase or None)

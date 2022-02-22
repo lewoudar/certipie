@@ -15,6 +15,7 @@ from .schemas import (
     PrivateKeyInput, DomainName, country_form, state_or_province_form, city_form, organization_form
 )
 from ..core import create_private_key, create_csr, create_auto_certificate
+from ..types import PrivateKey
 
 router = APIRouter(tags=['certificate'])
 
@@ -39,7 +40,7 @@ def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: PrivateKeyIn
 @router.post('/csr', response_class=FileResponse)
 def get_csr(
         background_tasks: BackgroundTasks,
-        private_key: Optional[rsa.RSAPrivateKey] = Depends(get_private_key),
+        private_key: Optional[PrivateKey] = Depends(get_private_key),
         passphrase: bytes = Depends(get_passphrase),
         filename_prefix: str = Form(
             'csr',
