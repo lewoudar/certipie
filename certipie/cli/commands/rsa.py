@@ -2,13 +2,8 @@ from pathlib import Path
 
 import click
 
+from certipie.cli.options import directory_option
 from certipie.core import create_private_key, get_public_key_from_private_key
-
-
-def get_path(ctx, param, value):
-    if value:
-        return Path(value)
-    return Path.cwd()
 
 
 @click.command()
@@ -20,12 +15,7 @@ def get_path(ctx, param, value):
 )
 @click.option('-s', '--size', type=click.IntRange(min=512), help='The key size.', default=2048, show_default=True)
 @click.password_option('-p', '--passphrase', prompt='Enter the passphrase', default='passphrase', show_default=True)
-@click.option(
-    '-d', '--directory',
-    type=click.Path(exists=True, file_okay=False, writable=True),
-    callback=get_path,
-    help='The directory where the files will be created. Defaults to the current working directory if not provided.'
-)
+@directory_option
 def rsa(filename: str, size: int, passphrase: str, directory: Path):
     """Creates a pair of private/public keys using the RSA algorithm."""
     # I make sure to take the name part of filename if somebody tries to give an awkward path like ../../etc/passwd

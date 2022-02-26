@@ -15,7 +15,7 @@ def assert_csr(paths: list[Path], prefix='csr') -> None:
         if 'key' in path.name:
             assert path.read_text().startswith('-----BEGIN RSA PRIVATE KEY-----')
         else:
-            assert path.stem == prefix
+            assert path.name == f'{prefix}.pem'
             assert path.read_text().startswith('-----BEGIN CERTIFICATE REQUEST-----')
 
 
@@ -24,5 +24,5 @@ def assert_cert(paths: list[Path], prefix='cert') -> None:
         if 'key' in path.name:
             assert path.read_text().startswith('-----BEGIN RSA PRIVATE KEY-----')
         else:
-            assert path.stem == prefix
+            assert path.name == f'{prefix}.pem'
             assert path.read_text().startswith('-----BEGIN CERTIFICATE-----')

@@ -11,6 +11,14 @@ def test_should_print_error_when_key_size_is_less_than_512(runner):
     assert "Invalid value for '-s' / '--size': 40 is not in the range x>=512." in result.output
 
 
+def test_should_print_error_when_directory_does_not_exist(runner):
+    result = runner.invoke(cert, ['rsa', '-d', 'fake_folder'])
+
+    assert result.exit_code == 2
+    assert 'directory' in result.output
+    assert 'fake_folder' in result.output
+
+
 @pytest.mark.parametrize('size_option', ['-s', '--size'])
 @pytest.mark.parametrize('passphrase_option', ['-p', '--passphrase'])
 def test_should_create_pair_of_keys(runner, isolated_path, size_option, passphrase_option):
@@ -28,7 +36,7 @@ def test_should_create_pair_of_keys(runner, isolated_path, size_option, passphra
 @pytest.mark.parametrize('filename_option', ['-f', '--filename'])
 @pytest.mark.parametrize('directory_option', ['-d', '--directory'])
 def test_should_create_pair_of_keys_with_passphrase_prompt(runner, tmp_path, filename_option, directory_option):
-    result = runner.invoke(cert, ['rsa', filename_option, 'key', directory_option, f'{tmp_path}'], input='foo\nfoo\n')
+    result = runner.invoke(cert, ['rsa', filename_option, 'key', directory_option, tmp_path], input='foo\nfoo\n')
     private_key = tmp_path / 'key'
     public_key = tmp_path / 'key.pub'
 
