@@ -3,18 +3,14 @@ from pathlib import Path
 import click
 from cryptography.exceptions import UnsupportedAlgorithm
 
-from certipie.cli.helpers import validate_country
-from certipie.cli.options import directory_option
+from certipie.cli.options import common_certificate_options
 from certipie.cli.parameters import DOMAIN, DomainNameListParamType
 from certipie.core import create_csr
 
 
 @click.command()
 @click.option('-f', '--filename', help='Name of the csr file', default='csr.pem', show_default=True)
-@click.option('-c', '--country', prompt=True, help='Country code in two letters.', callback=validate_country)
-@click.option('-s', '--state', prompt=True, help='State or province of the related organization.')
-@click.option('-C', '--city', prompt=True, help='The city of the related organization.')
-@click.option('-o', '--organization', prompt=True, help='The organization requesting a certificate.')
+@common_certificate_options
 @click.option(
     '-n', '--name',
     type=DOMAIN,
@@ -26,15 +22,6 @@ from certipie.core import create_csr
     type=DomainNameListParamType(),
     help='Alternative domain names covered by the certificate. If not provided, defaults to the common name.'
 )
-@click.option(
-    '-k', '--key',
-    type=click.Path(dir_okay=False, exists=True),
-    help=(
-            'The private key used to sign the certificate signing request. '
-            'If not provided an RSA one with no passphrase will be created.'
-    )
-)
-@directory_option
 def csr(
         filename: str,
         country: str,
