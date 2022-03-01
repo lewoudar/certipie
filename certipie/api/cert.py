@@ -130,7 +130,7 @@ def get_auto_certificate(
         date_end: datetime = Depends(get_date_end)
 ):
     """
-    Generates an auto-certificate you can use for testing and development purposes.
+    Generates a self-signed certificate you can use for testing and development purposes.
     If you don't provide a private key, an RSA one will be created and returned to the resulting zip file.
     """
     tmp_dir = tempfile.mkdtemp()
