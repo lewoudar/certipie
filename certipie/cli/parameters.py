@@ -1,6 +1,6 @@
 """Custom click parameters."""
 import ipaddress
-from typing import Union
+from typing import Union, Literal
 
 import click
 import pydantic
@@ -11,6 +11,14 @@ from certipie.core import is_domain_name
 
 class IpModel(pydantic.BaseModel):
     ip: Union[ipaddress.IPv6Network, ipaddress.IPv4Network, ipaddress.IPv6Address, ipaddress.IPv4Address]
+
+
+class HostModel(pydantic.BaseModel):
+    host: Union[Literal['localhost'], ipaddress.IPv6Address, ipaddress.IPv4Address]
+
+    @pydantic.validator('host', pre=True)
+    def lower_value(cls, value: str) -> str:
+        return value.lower()
 
 
 def auto_cert_domain_name(domain: str) -> bool:
@@ -24,14 +32,6 @@ def auto_cert_domain_name(domain: str) -> bool:
         return False
 
 
-# we don't use DomainParamType provided by click_params because it doesn't handle wildcards
-class DomainNameParamType(ValidatorParamType):
-    name = 'domain name'
-
-    def __init__(self):
-        super().__init__(callback=is_domain_name)
-
-
 # for the auto-cert command, the common name must be "localhost" or a domain name
 # we don't accept ip address/network here
 def validate_domain_name(ctx, param, value: str) -> str:
@@ -40,6 +40,22 @@ def validate_domain_name(ctx, param, value: str) -> str:
         raise click.BadParameter(f'{value} is neither "localhost" nor a valid domain name')
 
     return value
+
+
+def validate_host(ctx, param, value: str) -> str:
+    try:
+        HostModel(host=value)
+        return value
+    except pydantic.ValidationError:
+        raise click.BadParameter(f'{value} is neither "localhost" nor a valid ip address')
+
+
+# we don't use DomainParamType provided by click_params because it doesn't handle wildcards
+class DomainNameParamType(ValidatorParamType):
+    name = 'domain name'
+
+    def __init__(self):
+        super().__init__(callback=is_domain_name)
 
 
 class AutoCertDomainNameParamType(ValidatorParamType):
