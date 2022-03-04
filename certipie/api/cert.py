@@ -20,7 +20,7 @@ from ..types import PrivateKey
 router = APIRouter(tags=['certificate'])
 
 
-@router.post('/private-key', response_class=FileResponse)
+@router.post('/private-key', response_class=FileResponse, responses={200: {'content': {'application/zip': {}}}})
 def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: PrivateKeyInput = Depends(get_pk_info)):
     """Creates a zip file containing an RSA private key with his public counterpart."""
     tmp_dir = tempfile.mkdtemp()
@@ -37,7 +37,7 @@ def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: PrivateKeyIn
     return f'{zip_path}'
 
 
-@router.post('/csr', response_class=FileResponse)
+@router.post('/csr', response_class=FileResponse, responses={200: {'content': {'application/zip': {}}}})
 def get_csr(
         background_tasks: BackgroundTasks,
         private_key: Optional[PrivateKey] = Depends(get_private_key),
@@ -93,7 +93,7 @@ AlternativeNameType = Union[
 ]
 
 
-@router.post('/auto-certificate', response_class=FileResponse)
+@router.post('/auto-certificate', response_class=FileResponse, responses={200: {'content': {'application/zip': {}}}})
 def get_auto_certificate(
         background_tasks: BackgroundTasks,
         private_key: Optional[rsa.RSAPrivateKey] = Depends(get_private_key),
