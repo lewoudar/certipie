@@ -25,6 +25,7 @@ def create_private_key(
         key_size: conint(ge=512) = 2048,
         passphrase: AnyStr = b''
 ) -> rsa.RSAPrivateKey:
+    """Creates an RSA private key given the filename, key size and optional passphrase."""
     key = rsa.generate_private_key(public_exponent=65537, key_size=key_size)
 
     if not passphrase:
@@ -43,6 +44,7 @@ def create_private_key(
 
 @validate_arguments(config={'arbitrary_types_allowed': True})
 def get_public_key_from_private_key(file_path: Path, private_key: rsa.RSAPrivateKey) -> None:
+    """Retrieves public key from private key file and saves it in a file."""
     with file_path.open('wb') as f:
         f.write(private_key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo))
 
@@ -120,6 +122,7 @@ def create_csr(
         private_key: Union[FilePath, PrivateKey] = None,
         passphrase: AnyStr = b''
 ) -> CertificateSigningRequest:
+    """Creates a certificate signing request and eventually an RSA private key if it is not given as input."""
     if not is_domain_name(common_name):
         raise ValueError(f'{common_name} is not a valid domain name')
 
@@ -185,6 +188,7 @@ def create_auto_certificate(
         passphrase: AnyStr = b'',
         end_validity: datetime = Field(default_factory=_default_end_datetime)
 ) -> Certificate:
+    """Creates a self-signed certificate and eventually an RSA private key if it is not given as input."""
     if common_name.lower() != 'localhost' and not is_domain_name(common_name):
         raise ValueError(f'{common_name} is not a valid domain name')
 
