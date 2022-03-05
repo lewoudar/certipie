@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 
 from certipie.core import create_private_key
@@ -36,7 +38,8 @@ class TestPrivateKey:
             ]
         }
 
-    def test_should_create_pair_of_keys_without_payload(self, client, tmp_path, unzip_file):
+    def test_should_create_pair_of_keys_without_payload(self, caplog, client, tmp_path, unzip_file):
+        caplog.set_level(logging.INFO)
         r = client.post('/certs/private-key')
 
         assert r.status_code == 200
@@ -44,6 +47,8 @@ class TestPrivateKey:
 
         paths = unzip_file(r.content, tmp_path)
         assert_private_key(paths)
+        assert len(caplog.records) == 1
+        assert 'returns a zip file' in caplog.records[0].getMessage()
 
     @pytest.mark.parametrize(('payload', 'prefix'), [
         ({'filename_prefix': 'foo'}, 'foo'),
@@ -212,8 +217,9 @@ class TestCsr:
         assert_csr(paths, 'my_csr')
 
     def test_should_return_zipfile_with_given_private_key_and_no_passphrase(
-            self, tmp_path, client, unzip_file, base_payload
+            self, caplog, tmp_path, client, unzip_file, base_payload
     ):
+        caplog.set_level(logging.INFO)
         key = tmp_path / 'key.pem'
         create_private_key(f'{key}')
 
@@ -226,6 +232,8 @@ class TestCsr:
         paths = unzip_file(r.content, tmp_path)
         assert len(paths) == 1
         assert_csr(paths, 'my_csr')
+        assert len(caplog.records) == 1
+        assert 'returns a zip file' in caplog.records[0].getMessage()
 
 
 class TestAutoCertificate:
@@ -304,8 +312,9 @@ class TestAutoCertificate:
         assert_cert(paths)
 
     def test_should_return_zipfile_with_given_private_key_and_no_passphrase(
-            self, tmp_path, client, unzip_file, base_payload
+            self, caplog, tmp_path, client, unzip_file, base_payload
     ):
+        caplog.set_level(logging.INFO)
         key = tmp_path / 'key.pem'
         create_private_key(f'{key}')
         base_payload['filename_prefix'] = 'certificate'
@@ -318,3 +327,5 @@ class TestAutoCertificate:
 
         paths = unzip_file(r.content, tmp_path)
         assert_cert(paths, 'certificate')
+        assert len(caplog.records) == 1
+        assert 'returns a zip file' in caplog.records[0].getMessage()

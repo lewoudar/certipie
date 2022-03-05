@@ -1,4 +1,5 @@
 import ipaddress
+import logging
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -18,6 +19,7 @@ from ..core import create_private_key, create_csr, create_auto_certificate
 from ..types import PrivateKey
 
 router = APIRouter(tags=['certificate'])
+logger = logging.getLogger(__name__)
 
 
 @router.post('/private-key', response_class=FileResponse, responses={200: {'content': {'application/zip': {}}}})
@@ -34,6 +36,7 @@ def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: PrivateKeyIn
     create_zipfile(zip_path, [key_path, public_key_path])
 
     background_tasks.add_task(delete_tmp_dir, tmp_dir)
+    logger.info('returns a zip file %s with private and public keys', zip_path)
     return f'{zip_path}'
 
 
@@ -84,6 +87,7 @@ def get_csr(
     create_zipfile(zip_path, [path for path in tmp_path.iterdir()])
 
     background_tasks.add_task(delete_tmp_dir, tmp_dir)
+    logger.info('returns a zip file %s with certificate signing request', zip_path)
     return f'{zip_path}'
 
 
@@ -145,4 +149,5 @@ def get_auto_certificate(
     create_zipfile(zip_path, [path for path in tmp_path.iterdir()])
 
     background_tasks.add_task(delete_tmp_dir, tmp_dir)
+    logger.info('returns a zip file %s with self-signed certificate', zip_path)
     return f'{zip_path}'
