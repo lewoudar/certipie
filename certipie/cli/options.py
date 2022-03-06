@@ -45,7 +45,7 @@ key_option = click.option(
 
 def common_certificate_options(f: FC) -> FC:
     for option in [
-        directory_option, city_option, country_option, state_option, city_option, organization_option, key_option
+        directory_option, city_option, country_option, state_option, organization_option, key_option
     ]:
         f = option(f)
     return f
