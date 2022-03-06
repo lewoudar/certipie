@@ -67,7 +67,7 @@ The first command you will want to use is `install-completion` like the name sai
 completion. The shells currently supported are **bash**, **fish** and **zsh**.
 
 ```shell
-cert install-completion
+$ cert install-completion
 ```
 
 #### rsa
@@ -77,7 +77,7 @@ you to create an **RSA** private key which is one of the most common (if not the
 type of operation.
 
 ```shell
-cert rsa
+$ cert rsa
 Enter the passphrase [passphrase]: 
 Repeat for confirmation: 
 The pair of keys was successfully in ...
@@ -90,7 +90,7 @@ Note: On all commands, you can use `-h` option to get their usage documentation.
 This commands helps you create a certificate signing request.
 
 ```shell
-cert csr -f csr.pem
+$ cert csr -f csr.pem
 Organization: orga
 State: Ile-de-France
 Country: FR
@@ -122,7 +122,7 @@ This command helps you create a self-signed certificate useful when you want to 
 server.
 
 ```shell
-cert auto-cert -f cert.pem --validity=360
+$ cert auto-cert -f cert.pem --validity=360
 Organization: orga
 State: Ile-de-France
 Country: FR
@@ -144,7 +144,7 @@ This commands runs a server which serves a Swagger UI on `/docs` where you can p
 above. This is handy if you want non-technical staff to be able to use the command line features.
 
 ```shell
-cert server
+$ cert server
 ```
 
 If you open a browser on http://localhost:8000/docs you will see the swagger documentation.
@@ -155,7 +155,7 @@ Under the hood the server used is [hypercorn](https://pgjones.gitlab.io/hypercor
 [official documentation](https://pgjones.gitlab.io/hypercorn/how_to_guides/configuring.html).
 
 ```shell
-cert server -c /path/to/toml/file
+$ cert server -c /path/to/toml/file
 ```
 
 ### The REST API
