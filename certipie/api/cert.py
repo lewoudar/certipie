@@ -18,7 +18,7 @@ from .schemas import (
 from ..core import create_private_key, create_csr, create_auto_certificate
 from ..types import PrivateKey
 
-router = APIRouter(tags=['certificate'])
+router = APIRouter()
 logger = logging.getLogger(__name__)
 
 

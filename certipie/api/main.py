@@ -32,4 +32,4 @@ app = FastAPI(
     middleware=[Middleware(GZipMiddleware, minimum_size=1000)],
     exception_handlers=exception_handlers
 )
-app.include_router(router, prefix='/certs')
+app.include_router(router, prefix='/certs', tags=['certificate'])
