@@ -25,7 +25,7 @@ def install_bash_zsh(bash: bool = True) -> None:
         # bandit complains for shell injection, but we are not using untrusted string here, so it is fine.
         result = subprocess.run(command, shell=True, capture_output=True, check=True)  # nosec
     except subprocess.CalledProcessError:
-        click.secho(f'unable to get completion script for cert cli.', fg='red')
+        click.secho('unable to get completion script for cert cli.', fg='red')
         raise click.Abort()
 
     completion_script = completion_dir / f'cert-complete.{shell}'
@@ -42,11 +42,11 @@ def install_fish() -> None:
         completion_dir.mkdir(parents=True)
 
     try:
-        command = f'_CERT_COMPLETE=fish_source cert'
+        command = '_CERT_COMPLETE=fish_source cert'
         # bandit complains about shell injection, but we are not using untrusted string here, so it is fine.
         result = subprocess.run(command, shell=True, capture_output=True, check=True)  # nosec
     except subprocess.CalledProcessError:
-        click.secho(f'unable to get completion script for cert cli.', fg='red')
+        click.secho('unable to get completion script for cert cli.', fg='red')
         raise click.Abort()
 
     completion_script = completion_dir / 'cert.fish'
