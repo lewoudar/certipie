@@ -1,13 +1,18 @@
 [tool.poetry]
 name = "certipie"
 version = "0.1.0"
-description = "A tool to create csr and auto-certificate"
+description = "A tool to create certificate signing request and self-signed certificates"
 authors = ["le_woudar <lewoudar@gmail.com>"]
+readme = "README.md"
 license = "Apache-2.0"
+keywords = ["certificate", "cli", "cryptography", "fastapi"]
+repository = "https://github.com/lewoudar/certipie"
+documentation = "https://github.com/lewoudar/certipie#readme"
 
 classifiers = [
     "Intended Audience :: Developers",
     "Framework :: FastAPI",
+    "Topic :: Terminals",
     "Topic :: Security :: Cryptography",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: Implementation :: PyPy"
@@ -16,6 +21,9 @@ classifiers = [
 packages = [
     { include = "certipie" }
 ]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/lewoudar/certipie/issues"
 
 [tool.poetry.dependencies]
 python = "^3.9"
