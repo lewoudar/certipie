@@ -33,3 +33,4 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.codecov_token }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
+        if: matrix.python == '3.10'
