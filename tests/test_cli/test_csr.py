@@ -2,7 +2,7 @@ import pytest
 
 from certipie.cli.main import cert
 from certipie.core import create_private_key
-from tests.helpers import assert_csr
+from tests.helpers import assert_csr, skip_mac_os
 
 
 @pytest.fixture()
@@ -73,6 +73,7 @@ TO_PARAMETRIZE = (
 )
 
 
+@skip_mac_os
 @pytest.mark.parametrize(TO_PARAMETRIZE, [
     ('-c', '-s', '-C', '-o', '-n', '-a'),
     ('--country', '--state', '--city', '--organization', '--name', '--alt-names')

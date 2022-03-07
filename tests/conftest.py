@@ -60,4 +60,6 @@ def runner():
 def isolated_path(runner) -> Path:
     """Returns a path corresponding to an isolated folder suitable for file testing."""
     with runner.isolated_filesystem() as d:
+        print(d)
+        print(Path(d))
         yield Path(d)

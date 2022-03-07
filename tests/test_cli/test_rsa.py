@@ -1,7 +1,7 @@
 import pytest
 
 from certipie.cli.main import cert
-from tests.helpers import assert_private_key
+from tests.helpers import assert_private_key, skip_mac_os
 
 
 def test_should_print_error_when_key_size_is_less_than_512(runner):
@@ -19,6 +19,7 @@ def test_should_print_error_when_directory_does_not_exist(runner):
     assert 'fake_folder' in result.output
 
 
+@skip_mac_os
 @pytest.mark.parametrize('size_option', ['-s', '--size'])
 @pytest.mark.parametrize('passphrase_option', ['-p', '--passphrase'])
 def test_should_create_pair_of_keys(runner, isolated_path, size_option, passphrase_option):
