@@ -29,8 +29,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.10'
       - name: Tests
         run: nox -s tests-${{ matrix.python }}
-        env:
-          CODECOV_TOKEN: ${{ secrets.codecov_token }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
         if: matrix.python == '3.10'
+        with:
+          token: ${{ secrets.codecov_token }}
