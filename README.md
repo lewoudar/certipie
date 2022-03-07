@@ -1,5 +1,10 @@
 # certipie
 
+[![Pypi version](https://img.shields.io/pypi/v/certipie.svg)](https://pypi.org/project/certipie/)
+![](https://github.com/lewoudar/certipie/workflows/CI/badge.svg)
+[![Coverage Status](https://codecov.io/gh/lewoudar/certipie/branch/main/graphs/badge.svg?branch=main)](https://codecov.io/gh/lewoudar/certipie)
+[![License Apache 2](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+
 A utility library to create certificate signing request and self-signed certificates.
 
 ## Why?
