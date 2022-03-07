@@ -22,7 +22,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post('/private-key', response_class=FileResponse, responses={200: {'content': {'application/zip': {}}}})
+@router.post('/private-key', responses={200: {'content': {'application/zip': {}}}})
 def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: PrivateKeyInput = Depends(get_pk_info)):
     """Creates a zip file containing an RSA private key with his public counterpart."""
     tmp_dir = tempfile.mkdtemp()
@@ -37,10 +37,10 @@ def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: PrivateKeyIn
 
     background_tasks.add_task(delete_tmp_dir, tmp_dir)
     logger.info('returns a zip file %s with private and public keys', zip_path)
-    return f'{zip_path}'
+    return FileResponse(f'{zip_path}', media_type='application/zip')
 
 
-@router.post('/csr', response_class=FileResponse, responses={200: {'content': {'application/zip': {}}}})
+@router.post('/csr', responses={200: {'content': {'application/zip': {}}}})
 def get_csr(
         background_tasks: BackgroundTasks,
         private_key: Optional[PrivateKey] = Depends(get_private_key),
@@ -88,7 +88,7 @@ def get_csr(
 
     background_tasks.add_task(delete_tmp_dir, tmp_dir)
     logger.info('returns a zip file %s with certificate signing request', zip_path)
-    return f'{zip_path}'
+    return FileResponse(f'{zip_path}', media_type='application/zip')
 
 
 AlternativeNameType = Union[
@@ -97,7 +97,7 @@ AlternativeNameType = Union[
 ]
 
 
-@router.post('/auto-certificate', response_class=FileResponse, responses={200: {'content': {'application/zip': {}}}})
+@router.post('/auto-certificate', responses={200: {'content': {'application/zip': {}}}})
 def get_auto_certificate(
         background_tasks: BackgroundTasks,
         private_key: Optional[rsa.RSAPrivateKey] = Depends(get_private_key),
@@ -150,4 +150,4 @@ def get_auto_certificate(
 
     background_tasks.add_task(delete_tmp_dir, tmp_dir)
     logger.info('returns a zip file %s with self-signed certificate', zip_path)
-    return f'{zip_path}'
+    return FileResponse(f'{zip_path}', media_type='application/zip')
