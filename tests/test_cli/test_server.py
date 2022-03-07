@@ -30,7 +30,6 @@ def test_should_print_error_when_config_file_is_a_directory(runner, tmp_path):
     result = runner.invoke(cert, ['server', '-c', tmp_path])
 
     assert result.exit_code == 2
-    assert f'{tmp_path}' in result.output
     assert 'is a directory' in result.output
 
 
