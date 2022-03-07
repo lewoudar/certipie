@@ -1,4 +1,5 @@
 import os
+import platform
 import subprocess
 
 import pytest
@@ -50,6 +51,7 @@ def test_should_print_error_when_user_cannot_retrieve_completion_script(tmp_path
     assert 'unable to get completion script for cert cli.\nAborted!\n' == result.output
 
 
+@pytest.mark.skipif(platform.system() in ['Darwin', 'Windows'], reason='bash not supported on these OS')
 def test_should_create_completion_file_and_install_it_for_bash_shell(tmp_path, mocker, runner):
     mocker.patch('pathlib.Path.home', return_value=tmp_path)
     mocker.patch('shellingham.detect_shell', return_value=('bash', '/bin/bash'))
@@ -74,6 +76,7 @@ def test_should_create_completion_file_and_install_it_for_bash_shell(tmp_path, m
     assert lines == expected
 
 
+@pytest.mark.skipif(platform.system() == 'Windows', reason='zsh not supported on Windows')
 def test_should_create_completion_file_and_install_it_for_zsh_shell(tmp_path, mocker, runner):
     mocker.patch('pathlib.Path.home', return_value=tmp_path)
     mocker.patch('shellingham.detect_shell', return_value=('zsh', '/bin/zsh'))
@@ -97,6 +100,7 @@ def test_should_create_completion_file_and_install_it_for_zsh_shell(tmp_path, mo
     assert lines == [f'. {cli_completion_dir / "cert-complete.zsh"}']
 
 
+@pytest.mark.skipif(platform.system() == 'Windows', reason='fish not supported on Windows')
 def test_should_create_completion_file_and_install_it_for_fish_shell(tmp_path, mocker, runner):
     mocker.patch('pathlib.Path.home', return_value=tmp_path)
     mocker.patch('shellingham.detect_shell', return_value=('fish', '/bin/fish'))
