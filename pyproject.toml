@@ -5,7 +5,7 @@ description = "A tool to create certificate signing request and self-signed cert
 authors = ["le_woudar <lewoudar@gmail.com>"]
 readme = "README.md"
 license = "Apache-2.0"
-keywords = ["certificate", "cli", "cryptography", "fastapi"]
+keywords = ["certificate", "cli", "cryptography", "fastapi", "csr"]
 repository = "https://github.com/lewoudar/certipie"
 documentation = "https://github.com/lewoudar/certipie#readme"
 
@@ -14,8 +14,7 @@ classifiers = [
     "Framework :: FastAPI",
     "Topic :: Terminals",
     "Topic :: Security :: Cryptography",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: Implementation :: PyPy"
+    "Operating System :: OS Independent"
 ]
 
 packages = [
