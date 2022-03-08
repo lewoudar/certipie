@@ -27,8 +27,10 @@ exception_handlers = {
 
 app = FastAPI(
     title='certificate api',
+    version='0.2.0',
     description='Utilities to create certificate signing request and self-signed certificate for testing purpose',
     redoc_url=None,
+    docs_url='/',
     middleware=[Middleware(GZipMiddleware, minimum_size=1000)],
     exception_handlers=exception_handlers
 )
