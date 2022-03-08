@@ -145,14 +145,14 @@ Notes:
 
 #### server
 
-This commands runs a server which serves a Swagger UI on `/docs` where you can perform the previous commands explained
-above. This is handy if you want non-technical staff to be able to use the command line features.
+This commands runs a server which serves a Swagger UI where you can perform the previous commands explained above. This
+is handy if you want non-technical staff to be able to use the command line features.
 
 ```shell
 $ cert server
 ```
 
-If you open a browser on http://localhost:8000/docs you will see the swagger documentation.
+If you open a browser on http://localhost:8000 you will see the swagger documentation.
 ![](images/cert_api.png)
 
 Under the hood the server used is [hypercorn](https://pgjones.gitlab.io/hypercorn). You can configure it passing a
@@ -199,6 +199,24 @@ The last way to leverage certipie is to interact programmatically with its api. 
 
 Normally the api usage should be straightforward. The behaviour is the same as the command line. You can also look at
 tests if you are blocked.
+
+Here is a snippet on how to create a certificate signing request using `create_csr`:
+
+```python
+from certipie import create_csr
+
+create_csr(
+  'csr.pem',
+  'FR',
+  'Ile-de-France',
+  'Paris',
+  'organization',
+  'site.com',
+  alternative_names=['site.com', 'foo.site.com'],
+  private_key='key.pem',
+  passphrase='passphrase'
+)
+```
 
 There are two others objets exported:
 
