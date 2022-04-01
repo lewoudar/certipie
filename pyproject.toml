@@ -44,7 +44,7 @@ bandit = "^1.7.2"
 flake8 = "^4.0.1"
 pytest-mock = "^3.7.0"
 requests = "^2.27.1"
-httpie = "^3.0.2"
+httpie = "^3.1.0"
 nox = "^2022.1.7"
 
 [tool.poetry.scripts]
