@@ -33,4 +33,4 @@ jobs:
         uses: codecov/codecov-action@v2.1.0
         if: matrix.python == '3.10'
         with:
-          token: ${{ secrets.codecov_token }}
+          files: ./coverage.xml
