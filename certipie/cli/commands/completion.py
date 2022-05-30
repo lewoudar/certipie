@@ -22,7 +22,7 @@ def install_bash_zsh(bash: bool = True) -> None:
 
     try:
         command = f'_CERT_COMPLETE={shell}_source cert'
-        # bandit complains for shell injection, but we are not using untrusted string here, so it is fine.
+        # bandit complains about shell injection, but we are not using untrusted string here, so it is fine.
         result = subprocess.run(command, shell=True, capture_output=True, check=True)  # nosec
     except subprocess.CalledProcessError:
         click.secho('unable to get completion script for cert cli.', fg='red')
