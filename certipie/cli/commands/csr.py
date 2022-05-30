@@ -12,26 +12,28 @@ from certipie.core import create_csr
 @click.option('-f', '--filename', help='Name of the csr file', default='csr.pem', show_default=True)
 @common_certificate_options
 @click.option(
-    '-n', '--name',
+    '-n',
+    '--name',
     type=DOMAIN,
     prompt=True,
-    help='The common name i.e the main domain name covered by the certificate.'
+    help='The common name i.e the main domain name covered by the certificate.',
 )
 @click.option(
-    '-a', '--alt-names',
+    '-a',
+    '--alt-names',
     type=DomainNameListParamType(),
-    help='Alternative domain names covered by the certificate. If not provided, defaults to the common name.'
+    help='Alternative domain names covered by the certificate. If not provided, defaults to the common name.',
 )
 def csr(
-        filename: str,
-        country: str,
-        state: str,
-        city: str,
-        organization: str,
-        name: str,
-        alt_names: list[str],
-        directory: Path,
-        key: str = None
+    filename: str,
+    country: str,
+    state: str,
+    city: str,
+    organization: str,
+    name: str,
+    alt_names: list[str],
+    directory: Path,
+    key: str = None,
 ):
     """
     Creates a certificate signing request file given user input.

@@ -19,11 +19,7 @@ async def cert_exception(request: Request, exc: Union[TypeError, ValueError, Uns
     return JSONResponse(status_code=422, content={'detail': str(exc)})
 
 
-exception_handlers = {
-    TypeError: cert_exception,
-    ValueError: cert_exception,
-    UnsupportedAlgorithm: cert_exception
-}
+exception_handlers = {TypeError: cert_exception, ValueError: cert_exception, UnsupportedAlgorithm: cert_exception}
 
 app = FastAPI(
     title='certificate api',
@@ -32,6 +28,6 @@ app = FastAPI(
     redoc_url=None,
     docs_url='/',
     middleware=[Middleware(GZipMiddleware, minimum_size=1000)],
-    exception_handlers=exception_handlers
+    exception_handlers=exception_handlers,
 )
 app.include_router(router, prefix='/certs', tags=['certificate'])

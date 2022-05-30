@@ -76,28 +76,51 @@ def test_should_print_error_if_directory_does_not_exist(runner, base_arguments):
 
 
 TO_PARAMETRIZE = (
-    'country_option', 'state_option', 'city_option', 'organization_option', 'common_name_option', 'alt_name_option'
+    'country_option',
+    'state_option',
+    'city_option',
+    'organization_option',
+    'common_name_option',
+    'alt_name_option',
 )
 
 
 @skip_mac_os
-@pytest.mark.parametrize(TO_PARAMETRIZE, [
-    ('-c', '-s', '-C', '-o', '-n', '-a'),
-    ('--country', '--state', '--city', '--organization', '--name', '--alt-names')
-])
+@pytest.mark.parametrize(
+    TO_PARAMETRIZE,
+    [
+        ('-c', '-s', '-C', '-o', '-n', '-a'),
+        ('--country', '--state', '--city', '--organization', '--name', '--alt-names'),
+    ],
+)
 def test_should_create_auto_cert_without_giving_private_key(
-        runner, isolated_path, country_option, state_option, city_option, organization_option, common_name_option,
-        alt_name_option
+    runner,
+    isolated_path,
+    country_option,
+    state_option,
+    city_option,
+    organization_option,
+    common_name_option,
+    alt_name_option,
 ):
-    result = runner.invoke(cert, [
-        'auto-cert',
-        country_option, 'FR',
-        state_option, 'Ile-de-France',
-        city_option, 'Paris',
-        organization_option, 'hell yeah',
-        common_name_option, 'foo.com',
-        alt_name_option, 'foo.com,*.bar.com,192.168.1.1,::1'
-    ])
+    result = runner.invoke(
+        cert,
+        [
+            'auto-cert',
+            country_option,
+            'FR',
+            state_option,
+            'Ile-de-France',
+            city_option,
+            'Paris',
+            organization_option,
+            'hell yeah',
+            common_name_option,
+            'foo.com',
+            alt_name_option,
+            'foo.com,*.bar.com,192.168.1.1,::1',
+        ],
+    )
 
     assert result.exit_code == 0
     assert result.output == f'The self-signed certificate has been successfully created in {isolated_path}\n'
@@ -107,12 +130,9 @@ def test_should_create_auto_cert_without_giving_private_key(
     assert_cert(paths)
 
 
-@pytest.mark.parametrize(('filename_option', 'directory_option'), [
-    ('-f', '-d'),
-    ('--filename', '--directory')
-])
+@pytest.mark.parametrize(('filename_option', 'directory_option'), [('-f', '-d'), ('--filename', '--directory')])
 def test_should_create_auto_cert_with_given_private_key_and_passphrase(
-        runner, tmp_path, private_key, base_arguments, filename_option, directory_option
+    runner, tmp_path, private_key, base_arguments, filename_option, directory_option
 ):
     base_arguments.extend([filename_option, 'my_cert.pem', directory_option, tmp_path, '-k', private_key])
     result = runner.invoke(cert, base_arguments, input='passphrase\n')

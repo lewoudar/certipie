@@ -7,12 +7,12 @@ from typing import Optional
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from fastapi import File, Form, Depends
+from fastapi import Depends, File, Form
 from pydantic import SecretBytes
 
-from .schemas import PrivateKeyInput
 from ..core import get_public_key_from_private_key
 from ..types import PrivateKey
+from .schemas import PrivateKeyInput
 
 
 def delete_tmp_dir(tmp_dir: str) -> None:
@@ -24,24 +24,22 @@ def get_pk_info(pk_info: Optional[PrivateKeyInput] = None) -> PrivateKeyInput:
 
 
 def get_passphrase(
-        passphrase: Optional[SecretBytes] = Form(
-            b'',
-            description='passphrase used to encrypt the private key. Can be optional.',
-            example='secret passphrase'
-        ),
+    passphrase: Optional[SecretBytes] = Form(
+        b'', description='passphrase used to encrypt the private key. Can be optional.', example='secret passphrase'
+    ),
 ) -> bytes:
     return passphrase if isinstance(passphrase, bytes) else passphrase.get_secret_value()
 
 
 def get_private_key(
-        passphrase: bytes = Depends(get_passphrase),
-        private_key: Optional[bytes] = File(
-            None,
-            description=(
-                    'The private key used to generate the certificate signing request. If not provided, an RSA key '
-                    'will be created (without passphrase) and returned in the response.'
-            )
-        )
+    passphrase: bytes = Depends(get_passphrase),
+    private_key: Optional[bytes] = File(
+        None,
+        description=(
+            'The private key used to generate the certificate signing request. If not provided, an RSA key '
+            'will be created (without passphrase) and returned in the response.'
+        ),
+    ),
 ) -> Optional[PrivateKey]:
     if private_key is None:
         return
@@ -49,12 +47,7 @@ def get_private_key(
 
 
 def get_date_end(
-        end_validity: int = Form(
-            365,
-            description='The number of days the certificate will be valid.',
-            gt=0,
-            example=365
-        )
+    end_validity: int = Form(365, description='The number of days the certificate will be valid.', gt=0, example=365)
 ) -> datetime:
     return datetime.utcnow() + timedelta(days=end_validity)
 

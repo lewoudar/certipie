@@ -1,11 +1,11 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import click
 from cryptography.exceptions import UnsupportedAlgorithm
 
 from certipie.cli.options import common_certificate_options
-from certipie.cli.parameters import validate_domain_name, AutoCertDomainNameListParamType
+from certipie.cli.parameters import AutoCertDomainNameListParamType, validate_domain_name
 from certipie.core import create_auto_certificate
 
 
@@ -13,44 +13,47 @@ from certipie.core import create_auto_certificate
 @click.option('-f', '--filename', help='Name of the certificate file', default='cert.pem', show_default=True)
 @common_certificate_options
 @click.option(
-    '-n', '--name',
+    '-n',
+    '--name',
     default='localhost',
     show_default=True,
     help=(
-            'The common name i.e the main domain name covered by the certificate. '
-            'In this particular case, since the certificate is mainly intended for tests, ip adresses and ip networks '
-            'and the "localhost" value are also valid.'
+        'The common name i.e the main domain name covered by the certificate. '
+        'In this particular case, since the certificate is mainly intended for tests, ip adresses and ip networks '
+        'and the "localhost" value are also valid.'
     ),
-    callback=validate_domain_name
+    callback=validate_domain_name,
 )
 @click.option(
-    '-a', '--alt-names',
+    '-a',
+    '--alt-names',
     type=AutoCertDomainNameListParamType(),
     default='localhost,127.0.0.1,::1',
     show_default=True,
     help=(
-            'Alternative domain names covered by the certificate. '
-            'Ip addresses, ip networks and the "localhost" value are also supported.'
-    )
+        'Alternative domain names covered by the certificate. '
+        'Ip addresses, ip networks and the "localhost" value are also supported.'
+    ),
 )
 @click.option(
-    '-v', '--validity',
+    '-v',
+    '--validity',
     type=click.IntRange(min=1),
     help='Number of days the certificate will be valid starting from now.',
     default=365,
-    show_default=True
+    show_default=True,
 )
 def auto_certificate(
-        filename: str,
-        country: str,
-        state: str,
-        city: str,
-        organization: str,
-        name: str,
-        alt_names: list[str],
-        validity: int,
-        directory: Path,
-        key: str = None,
+    filename: str,
+    country: str,
+    state: str,
+    city: str,
+    organization: str,
+    name: str,
+    alt_names: list[str],
+    validity: int,
+    directory: Path,
+    key: str = None,
 ):
     """
     Creates a self-signed certificate useful for tests.
@@ -63,8 +66,16 @@ def auto_certificate(
 
     try:
         create_auto_certificate(
-            f'{cert_path}', country, state, city, organization, name, alt_names,
-            private_key=key, passphrase=passphrase, end_validity=end_date
+            f'{cert_path}',
+            country,
+            state,
+            city,
+            organization,
+            name,
+            alt_names,
+            private_key=key,
+            passphrase=passphrase,
+            end_validity=end_date,
         )
     except (ValueError, TypeError, UnsupportedAlgorithm):
         raise click.UsageError('The key file is not valid or the algorithm used is unsupported.')

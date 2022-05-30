@@ -1,10 +1,10 @@
 """Custom click parameters."""
 import ipaddress
-from typing import Union, Literal
+from typing import Literal, Union
 
 import click
 import pydantic
-from click_params import ValidatorParamType, ListParamType
+from click_params import ListParamType, ValidatorParamType
 
 from certipie.core import is_domain_name
 

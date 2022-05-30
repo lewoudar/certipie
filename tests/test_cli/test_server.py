@@ -41,10 +41,7 @@ def test_should_run_server_without_given_any_option(runner, mocker):
     run_mock.assert_called_once()
 
 
-@pytest.mark.parametrize(('host_option', 'port_option'), [
-    ('-H', '-p'),
-    ('--host', '--port')
-])
+@pytest.mark.parametrize(('host_option', 'port_option'), [('-H', '-p'), ('--host', '--port')])
 def test_should_run_server_giving_host_and_port(runner, mocker, host_option, port_option):
     run_mock = mocker.patch('trio.run')
     result = runner.invoke(cert, ['server', host_option, '127.0.0.1', port_option, '3000'])

@@ -1,5 +1,5 @@
 import pytest
-from pydantic import ValidationError, BaseModel
+from pydantic import BaseModel, ValidationError
 
 from certipie.api.schemas import DomainName
 

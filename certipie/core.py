@@ -3,27 +3,30 @@ import re
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Union, Protocol, runtime_checkable, AnyStr
+from typing import AnyStr, Protocol, Union, runtime_checkable
 
 import idna
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import (
-    load_pem_private_key, Encoding, PrivateFormat, BestAvailableEncryption, NoEncryption, PublicFormat
+    BestAvailableEncryption,
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+    PublicFormat,
+    load_pem_private_key,
 )
-from cryptography.x509 import CertificateSigningRequest, Certificate
+from cryptography.x509 import Certificate, CertificateSigningRequest
 from cryptography.x509.oid import NameOID
-from pydantic import validate_arguments, constr, conint, FilePath, Field
+from pydantic import Field, FilePath, conint, constr, validate_arguments
 
 from . import types
 
 
 @validate_arguments
 def create_private_key(
-        filename: constr(strict=True, min_length=1),
-        key_size: conint(ge=512) = 2048,
-        passphrase: AnyStr = b''
+    filename: constr(strict=True, min_length=1), key_size: conint(ge=512) = 2048, passphrase: AnyStr = b''
 ) -> rsa.RSAPrivateKey:
     """Creates an RSA private key given the filename, key size and optional passphrase."""
     key = rsa.generate_private_key(public_exponent=65537, key_size=key_size)
@@ -33,11 +36,13 @@ def create_private_key(
     else:
         encryption_algorithm = BestAvailableEncryption(passphrase)
     with open(filename, 'wb') as f:
-        f.write(key.private_bytes(
-            encoding=Encoding.PEM,
-            format=PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=encryption_algorithm,
-        ))
+        f.write(
+            key.private_bytes(
+                encoding=Encoding.PEM,
+                format=PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=encryption_algorithm,
+            )
+        )
 
     return key
 
@@ -80,11 +85,7 @@ class PrivateKey(Protocol):
 
 
 def _get_name_attributes(
-        country: str,
-        state_or_province: str,
-        city: str,
-        organization: str,
-        common_name: str
+    country: str, state_or_province: str, city: str, organization: str, common_name: str
 ) -> list[x509.NameAttribute]:
     return [
         x509.NameAttribute(NameOID.COUNTRY_NAME, country),
@@ -96,7 +97,7 @@ def _get_name_attributes(
 
 
 def _get_private_key(
-        filename: str, private_key: Union[Path, PrivateKey] = None, passphrase: AnyStr = b''
+    filename: str, private_key: Union[Path, PrivateKey] = None, passphrase: AnyStr = b''
 ) -> types.PrivateKey:
     file_path = Path(filename)
     private_key_path = file_path.parent / f'{uuid.uuid4()}-key.pem'
@@ -112,15 +113,15 @@ def _get_private_key(
 
 @validate_arguments(config={'arbitrary_types_allowed': True})
 def create_csr(
-        filename: constr(strict=True, min_length=1),
-        country: constr(strict=True),
-        state_or_province: constr(strict=True),
-        city: constr(strict=True),
-        organization: constr(strict=True),
-        common_name: constr(strict=True, max_length=255),
-        alternative_names: list[constr(strict=True, max_length=255)] = None,
-        private_key: Union[FilePath, PrivateKey] = None,
-        passphrase: AnyStr = b''
+    filename: constr(strict=True, min_length=1),
+    country: constr(strict=True),
+    state_or_province: constr(strict=True),
+    city: constr(strict=True),
+    organization: constr(strict=True),
+    common_name: constr(strict=True, max_length=255),
+    alternative_names: list[constr(strict=True, max_length=255)] = None,
+    private_key: Union[FilePath, PrivateKey] = None,
+    passphrase: AnyStr = b'',
 ) -> CertificateSigningRequest:
     """Creates a certificate signing request and eventually an RSA private key if it is not given as input."""
     if not is_domain_name(common_name):
@@ -136,16 +137,26 @@ def create_csr(
 
     key = _get_private_key(filename, private_key, passphrase)
 
-    csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name(
-        # Provide various details about the organization.
-        _get_name_attributes(country, state_or_province, city, organization, common_name)
-    )).add_extension(
-        x509.SubjectAlternativeName([
-            # Describe what sites we want this certificate for.
-            x509.DNSName(get_idn_domain_name(alt_name)) for alt_name in alternative_names
-        ]),
-        critical=False,
-    ).sign(key, hashes.SHA256())
+    csr = (
+        x509.CertificateSigningRequestBuilder()
+        .subject_name(
+            x509.Name(
+                # Provide various details about the organization.
+                _get_name_attributes(country, state_or_province, city, organization, common_name)
+            )
+        )
+        .add_extension(
+            x509.SubjectAlternativeName(
+                [
+                    # Describe what sites we want this certificate for.
+                    x509.DNSName(get_idn_domain_name(alt_name))
+                    for alt_name in alternative_names
+                ]
+            ),
+            critical=False,
+        )
+        .sign(key, hashes.SHA256())
+    )
 
     with open(filename, 'wb') as f:
         f.write(csr.public_bytes(Encoding.PEM))
@@ -177,16 +188,16 @@ def _default_end_datetime() -> datetime:
 
 @validate_arguments(config={'arbitrary_types_allowed': True})
 def create_auto_certificate(
-        filename: constr(strict=True, min_length=1),
-        country: constr(strict=True),
-        state_or_province: constr(strict=True),
-        city: constr(strict=True),
-        organization: constr(strict=True),
-        common_name: constr(strict=True, max_length=255) = 'localhost',
-        alternative_names: list[constr(strict=True)] = None,
-        private_key: Union[FilePath, PrivateKey] = None,
-        passphrase: AnyStr = b'',
-        end_validity: datetime = Field(default_factory=_default_end_datetime)
+    filename: constr(strict=True, min_length=1),
+    country: constr(strict=True),
+    state_or_province: constr(strict=True),
+    city: constr(strict=True),
+    organization: constr(strict=True),
+    common_name: constr(strict=True, max_length=255) = 'localhost',
+    alternative_names: list[constr(strict=True)] = None,
+    private_key: Union[FilePath, PrivateKey] = None,
+    passphrase: AnyStr = b'',
+    end_validity: datetime = Field(default_factory=_default_end_datetime),
 ) -> Certificate:
     """Creates a self-signed certificate and eventually an RSA private key if it is not given as input."""
     if common_name.lower() != 'localhost' and not is_domain_name(common_name):
@@ -199,24 +210,24 @@ def create_auto_certificate(
     key = _get_private_key(filename, private_key, passphrase)
     subject = issuer = x509.Name(_get_name_attributes(country, state_or_province, city, organization, common_name))
 
-    cert = x509.CertificateBuilder().subject_name(
-        subject
-    ).issuer_name(
-        issuer
-    ).public_key(
-        key.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        # we put the base date on 2000-01-01, so we get cover!
-        datetime(2000, 1, 1)
-    ).not_valid_after(
-        end_validity
-    ).add_extension(
-        x509.SubjectAlternativeName(alternative_names),
-        critical=False,
-        # Sign our certificate with our private key
-    ).sign(key, hashes.SHA256())
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(
+            # we put the base date on 2000-01-01, so we get cover!
+            datetime(2000, 1, 1)
+        )
+        .not_valid_after(end_validity)
+        .add_extension(
+            x509.SubjectAlternativeName(alternative_names),
+            critical=False,
+            # Sign our certificate with our private key
+        )
+        .sign(key, hashes.SHA256())
+    )
 
     with open(filename, 'wb') as f:
         f.write(cert.public_bytes(Encoding.PEM))

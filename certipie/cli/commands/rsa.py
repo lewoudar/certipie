@@ -8,10 +8,11 @@ from certipie.core import create_private_key, get_public_key_from_private_key
 
 @click.command()
 @click.option(
-    '-f', '--filename',
+    '-f',
+    '--filename',
     help='Name of the private key. The public key name will be derived from it and ends with a "pub" suffix.',
     default='id_rsa.pem',
-    show_default=True
+    show_default=True,
 )
 @click.option('-s', '--size', type=click.IntRange(min=512), help='The key size.', default=2048, show_default=True)
 @click.password_option('-p', '--passphrase', prompt='Enter the passphrase', default='passphrase', show_default=True)

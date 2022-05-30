@@ -58,6 +58,14 @@ cert = "certipie.cli.main:cert"
 testpaths = ["tests"]
 addopts = "--cov=certipie --cov-report html --cov-report xml"
 
+[tool.isort]
+line_length = 120
+profile = "black"
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

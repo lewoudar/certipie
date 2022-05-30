@@ -1,6 +1,6 @@
 """This module groups commands used in many (sub) commands"""
 from pathlib import Path
-from typing import TypeVar, Callable, Any, Optional
+from typing import Any, Callable, Optional, TypeVar
 
 import click
 
@@ -20,10 +20,11 @@ def get_path(ctx, param, value: Optional[str]) -> Path:
 
 
 directory_option = click.option(
-    '-d', '--directory',
+    '-d',
+    '--directory',
     type=click.Path(exists=True, file_okay=False, writable=True),
     callback=get_path,
-    help='The directory where the files will be created. Defaults to the current working directory if not provided.'
+    help='The directory where the files will be created. Defaults to the current working directory if not provided.',
 )
 country_option = click.option(
     '-c', '--country', prompt=True, help='Country code in two letters.', callback=validate_country
@@ -34,18 +35,17 @@ organization_option = click.option(
     '-o', '--organization', prompt=True, help='The organization requesting a certificate.'
 )
 key_option = click.option(
-    '-k', '--key',
+    '-k',
+    '--key',
     type=click.Path(dir_okay=False, exists=True),
     help=(
         'The private key used to sign the certificate signing request. '
         'If not provided an RSA one with no passphrase will be created.'
-    )
+    ),
 )
 
 
 def common_certificate_options(f: FC) -> FC:
-    for option in [
-        directory_option, city_option, country_option, state_option, organization_option, key_option
-    ]:
+    for option in [directory_option, city_option, country_option, state_option, organization_option, key_option]:
         f = option(f)
     return f

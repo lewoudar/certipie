@@ -83,8 +83,8 @@ type of operation.
 
 ```shell
 $ cert rsa
-Enter the passphrase [passphrase]: 
-Repeat for confirmation: 
+Enter the passphrase [passphrase]:
+Repeat for confirmation:
 The pair of keys was successfully in ...
 ```
 

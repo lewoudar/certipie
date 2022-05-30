@@ -36,11 +36,7 @@ def test_should_print_error_if_shell_is_not_supported(mocker, runner):
     assert f'Your shell is not supported. Shells supported are: {shells_string}\nAborted!\n' == result.output
 
 
-@pytest.mark.parametrize('shell', [
-    ('bash', '/bin/bash'),
-    ('zsh', '/bin/zsh'),
-    ('fish', '/bin/fish')
-])
+@pytest.mark.parametrize('shell', [('bash', '/bin/bash'), ('zsh', '/bin/zsh'), ('fish', '/bin/fish')])
 def test_should_print_error_when_user_cannot_retrieve_completion_script(tmp_path, mocker, runner, shell):
     mocker.patch('pathlib.Path.home', return_value=tmp_path)
     mocker.patch('shellingham.detect_shell', return_value=shell)
@@ -93,7 +89,7 @@ def test_should_create_completion_file_and_install_it_for_zsh_shell(tmp_path, mo
     content = completion_file.read_text()
 
     assert content.startswith('#compdef cert')
-    assert content.endswith(f'compdef _cert_completion cert;\n\n')
+    assert content.endswith('compdef _cert_completion cert;\n\n')
 
     # .zshrc check
     lines = [line for line in zshrc_file.read_text().split('\n') if line]

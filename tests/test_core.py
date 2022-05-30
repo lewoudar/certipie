@@ -5,11 +5,15 @@ import idna
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.x509 import CertificateSigningRequest, RFC822Name, IPAddress, DNSName, Certificate
+from cryptography.x509 import Certificate, CertificateSigningRequest, DNSName, IPAddress, RFC822Name
 from pydantic import ValidationError
 
 from certipie.core import (
-    create_private_key, get_public_key_from_private_key, create_csr, normalize_alternative_name, create_auto_certificate
+    create_auto_certificate,
+    create_csr,
+    create_private_key,
+    get_public_key_from_private_key,
+    normalize_alternative_name,
 )
 
 
@@ -93,19 +97,14 @@ class TestCreateCsr:
 
     # common parameter checks
 
-    @pytest.mark.parametrize('argument', [
-        {'country': 4},
-        {'state_or_province': 4},
-        {'city': 4},
-        {'organization': 4}
-    ])
+    @pytest.mark.parametrize('argument', [{'country': 4}, {'state_or_province': 4}, {'city': 4}, {'organization': 4}])
     def test_should_raise_error_when_common_parameters_are_not_string(self, argument):
         arguments = {
             'country': 'FR',
             'state_or_province': 'Ile-de-France',
             'city': 'Paris',
             'organization': 'organization',
-            'common_name': 'site.com'
+            'common_name': 'site.com',
         }
         arguments |= argument
         with pytest.raises(ValidationError) as exc_info:
@@ -199,8 +198,14 @@ class TestCreateCsr:
     def test_should_create_csr_without_given_alternative_names(self, tmp_path, private_key, domain):
         csr_path = tmp_path / 'csr.pem'
         csr = create_csr(
-            f'{csr_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
-            private_key=private_key, passphrase=b'passphrase'
+            f'{csr_path}',
+            'FR',
+            'Ile-de-France',
+            'Paris',
+            'organization',
+            domain,
+            private_key=private_key,
+            passphrase=b'passphrase',
         )
 
         assert csr_path.is_file()
@@ -213,8 +218,15 @@ class TestCreateCsr:
         csr_path = tmp_path / 'csr.pem'
         alternative_names = ['site.com', '*.site.com', 'ドメイン.テスト']
         csr = create_csr(
-            f'{csr_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com',
-            private_key=private_key, passphrase=b'passphrase', alternative_names=alternative_names
+            f'{csr_path}',
+            'FR',
+            'Ile-de-France',
+            'Paris',
+            'organization',
+            'site.com',
+            private_key=private_key,
+            passphrase=b'passphrase',
+            alternative_names=alternative_names,
         )
 
         assert csr_path.read_text().startswith('-----BEGIN CERTIFICATE REQUEST-----')
@@ -228,10 +240,7 @@ class TestCreateCsr:
         csr_path = tmp_path / 'csr.pem'
         domain = 'site.com'
         pk = load_pem_private_key(private_key.read_bytes(), b'passphrase')
-        csr = create_csr(
-            f'{csr_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
-            private_key=pk
-        )
+        csr = create_csr(f'{csr_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain, private_key=pk)
 
         assert csr_path.read_text().startswith('-----BEGIN CERTIFICATE REQUEST-----')
         assert csr.subject.rfc4514_string() == f'CN={domain},O=organization,L=Paris,ST=Ile-de-France,C=FR'
@@ -242,10 +251,7 @@ class TestCreateCsr:
         csr_path = tmp_path / 'csr.pem'
         create_private_key(f'{key}')
         domain = 'site.com'
-        csr = create_csr(
-            f'{csr_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
-            private_key=key
-        )
+        csr = create_csr(f'{csr_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain, private_key=key)
 
         assert csr_path.read_text().startswith('-----BEGIN CERTIFICATE REQUEST-----')
         assert csr.subject.rfc4514_string() == f'CN={domain},O=organization,L=Paris,ST=Ile-de-France,C=FR'
@@ -271,10 +277,7 @@ class TestNormalizeAlternativeName:
         with pytest.raises(ValueError):
             normalize_alternative_name('foo@ドメイン.テスト')
 
-    @pytest.mark.parametrize('email', [
-        'foo@bar.com',
-        f'foo@{idna.encode("ドメイン.テスト").decode("ascii")}'
-    ])
+    @pytest.mark.parametrize('email', ['foo@bar.com', f'foo@{idna.encode("ドメイン.テスト").decode("ascii")}'])
     def test_should_return_valid_x509_object_given_correct_email(self, email):
         name = normalize_alternative_name(email)
         assert isinstance(name, RFC822Name)
@@ -318,19 +321,14 @@ class TestCreateAutoCertificate:
 
     # common parameter checks
 
-    @pytest.mark.parametrize('argument', [
-        {'country': 4},
-        {'state_or_province': 4},
-        {'city': 4},
-        {'organization': 4}
-    ])
+    @pytest.mark.parametrize('argument', [{'country': 4}, {'state_or_province': 4}, {'city': 4}, {'organization': 4}])
     def test_should_raise_error_when_common_parameters_are_not_string(self, argument):
         arguments = {
             'country': 'FR',
             'state_or_province': 'Ile-de-France',
             'city': 'Paris',
             'organization': 'organization',
-            'common_name': 'site.com'
+            'common_name': 'site.com',
         }
         arguments |= argument
 
@@ -372,8 +370,13 @@ class TestCreateAutoCertificate:
         alternative_names = ['localhost', 'a' * 256]  # 2nd is incorrect
         with pytest.raises(idna.IDNAError):
             create_auto_certificate(
-                'cert.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com',
-                alternative_names=alternative_names
+                'cert.pem',
+                'FR',
+                'Ile-de-France',
+                'Paris',
+                'organization',
+                'site.com',
+                alternative_names=alternative_names,
             )
 
     # private_key checks
@@ -433,8 +436,7 @@ class TestCreateAutoCertificate:
         alternative_names = ['site.com', '*.site.com', '1.1.1.1', '::1', 'foo@email.com']
         cert_path = tmp_path / 'cert.pem'
         cert = create_auto_certificate(
-            f'{cert_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
-            alternative_names=alternative_names
+            f'{cert_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain, alternative_names=alternative_names
         )
 
         self.assert_certificate(cert_path, cert, domain)
@@ -450,8 +452,14 @@ class TestCreateAutoCertificate:
             private_key = load_pem_private_key(private_key.read_bytes(), passphrase)
 
         cert = create_auto_certificate(
-            f'{cert_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
-            private_key=private_key, passphrase=passphrase
+            f'{cert_path}',
+            'FR',
+            'Ile-de-France',
+            'Paris',
+            'organization',
+            domain,
+            private_key=private_key,
+            passphrase=passphrase,
         )
 
         self.assert_certificate(cert_path, cert, domain)
@@ -463,8 +471,7 @@ class TestCreateAutoCertificate:
         create_private_key(f'{key}')
 
         cert = create_auto_certificate(
-            f'{cert_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain,
-            private_key=key
+            f'{cert_path}', 'FR', 'Ile-de-France', 'Paris', 'organization', domain, private_key=key
         )
 
         self.assert_certificate(cert_path, cert, domain)

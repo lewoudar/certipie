@@ -8,8 +8,19 @@ from tests.helpers import assert_csr, skip_mac_os
 @pytest.fixture()
 def base_arguments() -> list[str]:
     return [
-        'csr', '-c', 'FR', '-s', 'Ile-de-France', '-C', 'Paris', '-o', 'hell yeah', '-n', 'foo.com', '-a',
-        'foo.com,*.bar.com'
+        'csr',
+        '-c',
+        'FR',
+        '-s',
+        'Ile-de-France',
+        '-C',
+        'Paris',
+        '-o',
+        'hell yeah',
+        '-n',
+        'foo.com',
+        '-a',
+        'foo.com,*.bar.com',
     ]
 
 
@@ -69,28 +80,51 @@ def test_should_print_error_if_directory_does_not_exist(runner, base_arguments):
 
 
 TO_PARAMETRIZE = (
-    'country_option', 'state_option', 'city_option', 'organization_option', 'common_name_option', 'alt_name_option'
+    'country_option',
+    'state_option',
+    'city_option',
+    'organization_option',
+    'common_name_option',
+    'alt_name_option',
 )
 
 
 @skip_mac_os
-@pytest.mark.parametrize(TO_PARAMETRIZE, [
-    ('-c', '-s', '-C', '-o', '-n', '-a'),
-    ('--country', '--state', '--city', '--organization', '--name', '--alt-names')
-])
+@pytest.mark.parametrize(
+    TO_PARAMETRIZE,
+    [
+        ('-c', '-s', '-C', '-o', '-n', '-a'),
+        ('--country', '--state', '--city', '--organization', '--name', '--alt-names'),
+    ],
+)
 def test_should_create_csr_without_giving_private_key(
-        runner, isolated_path, country_option, state_option, city_option, organization_option, common_name_option,
-        alt_name_option
+    runner,
+    isolated_path,
+    country_option,
+    state_option,
+    city_option,
+    organization_option,
+    common_name_option,
+    alt_name_option,
 ):
-    result = runner.invoke(cert, [
-        'csr',
-        country_option, 'FR',
-        state_option, 'Ile-de-France',
-        city_option, 'Paris',
-        organization_option, 'hell yeah',
-        common_name_option, 'foo.com',
-        alt_name_option, 'foo.com,*.bar.com'
-    ])
+    result = runner.invoke(
+        cert,
+        [
+            'csr',
+            country_option,
+            'FR',
+            state_option,
+            'Ile-de-France',
+            city_option,
+            'Paris',
+            organization_option,
+            'hell yeah',
+            common_name_option,
+            'foo.com',
+            alt_name_option,
+            'foo.com,*.bar.com',
+        ],
+    )
 
     assert result.exit_code == 0
     assert result.output == f'The certificate signing request has been successfully created in {isolated_path}\n'
@@ -100,12 +134,9 @@ def test_should_create_csr_without_giving_private_key(
     assert_csr(paths)
 
 
-@pytest.mark.parametrize(('filename_option', 'directory_option'), [
-    ('-f', '-d'),
-    ('--filename', '--directory')
-])
+@pytest.mark.parametrize(('filename_option', 'directory_option'), [('-f', '-d'), ('--filename', '--directory')])
 def test_should_create_csr_with_given_private_key_and_passphrase(
-        runner, tmp_path, private_key, base_arguments, filename_option, directory_option
+    runner, tmp_path, private_key, base_arguments, filename_option, directory_option
 ):
     base_arguments.extend([filename_option, 'my_csr.pem', directory_option, tmp_path, '-k', private_key])
     result = runner.invoke(cert, base_arguments, input='passphrase\n')
