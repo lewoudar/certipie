@@ -46,6 +46,10 @@ pytest-mock = "^3.7.0"
 requests = "^2.27.1"
 httpie = "^3.1.0"
 nox = "^2022.1.7"
+pre-commit = "^2.19.0"
+black = "^22.3.0"
+isort = "^5.10.1"
+safety = "^1.10.3"
 
 [tool.poetry.scripts]
 cert = "certipie.cli.main:cert"
