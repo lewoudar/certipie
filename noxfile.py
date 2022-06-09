@@ -13,9 +13,18 @@ CI_ENVIRONMENT = 'GITHUB_ACTIONS' in os.environ
 def lint(session):
     """Performs pep8 and security checks."""
     source_code = 'certipie'
-    session.install('flake8==4.0.1', 'bandit==1.7.2')
+    session.install('flake8==4.0.1', 'bandit==1.7.2', 'black==22.3.0')
     session.run('flake8', source_code)
     session.run('bandit', '-r', source_code)
+    session.run('black', source_code, 'tests', '--check')
+
+
+@nox.session(python=PYTHON_VERSIONS[-1])
+def safety(session):
+    """Checks vulnerabilities of the installed packages."""
+    session.install('poetry>=1.0.0,<2.0.0')
+    session.run('poetry', 'install')
+    session.run('safety', 'check')
 
 
 @nox.session(python=PYTHON_VERSIONS)
