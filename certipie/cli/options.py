@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, TypeVar
 
 import click
 
-FC = TypeVar("FC", Callable[..., Any], click.Command)
+FC = TypeVar('FC', Callable[..., Any], click.Command)
 
 
 def validate_country(ctx, param, value: str) -> Optional[str]:

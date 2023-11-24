@@ -13,7 +13,6 @@ CI_ENVIRONMENT = 'GITHUB_ACTIONS' in os.environ
 def lint(session):
     """Performs pep8 and security checks."""
     source_code = 'certipie'
-    session.install('poetry>=1.0.0,<1.7.0')
     session.run('poetry', 'install', '--only', 'lint')
     session.run('ruff', 'check', source_code)
     session.run('bandit', '-r', source_code)
@@ -22,7 +21,6 @@ def lint(session):
 @nox.session(python=PYTHON_VERSIONS[-1])
 def safety(session):
     """Checks vulnerabilities of the installed packages."""
-    session.install('poetry>=1.0.0,<1.7.0')
     session.run('poetry', 'install', '--only', 'security')
     session.run('safety', 'check')
 
@@ -30,7 +28,6 @@ def safety(session):
 @nox.session(python=PYTHON_VERSIONS)
 def tests(session):
     """Runs the test suite."""
-    session.install('poetry>=1.0.0,<1.7.0')
     session.run('poetry', 'install', '--with', 'test')
     session.run('pytest')
 
@@ -40,7 +37,6 @@ def deploy(session):
     """
     Deploys on pypi.
     """
-    session.install('poetry>=1.0.0,<1.7.0')
     if 'POETRY_PYPI_TOKEN_PYPI' not in os.environ:
         session.error('you must specify your pypi token api to deploy your package')
 
