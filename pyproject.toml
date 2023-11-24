@@ -37,18 +37,22 @@ click-params = "^0.1.2"
 trio = "^0.20.0"
 shellingham = "^1.4.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.lint.dependencies]
+bandit = "^1.7.4"
+ruff = "^0.1.6"
+
+[tool.poetry.group.test.dependencies]
 pytest = "^7.0.0"
 pytest-cov = "^3.0.0"
-bandit = "^1.7.2"
-flake8 = "^4.0.1"
 pytest-mock = "^3.7.0"
+nox = "^2023.4.22"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^2.19.0"
 requests = "^2.27.1"
 httpie = "^3.1.0"
-nox = "^2022.1.7"
-pre-commit = "^2.19.0"
-black = "^22.3.0"
-isort = "^5.10.1"
+
+[tool.poetry.group.audit.dependencies]
 safety = "^1.10.3"
 
 [tool.poetry.scripts]
@@ -56,15 +60,24 @@ cert = "certipie.cli.main:cert"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=certipie --cov-report html --cov-report xml"
+addopts = "--cov=certipie --cov-report html --cov-report xml --cov-report term"
 
-[tool.isort]
-line_length = 120
-profile = "black"
-
-[tool.black]
+[tool.ruff]
 line-length = 120
-skip-string-normalization = true
+target-version = "py38"
+
+[tool.ruff.lint]
+extend-select = [
+  "UP",  # pyupgrade
+  "I",   # isort
+  "S",   # flake8-bandit
+  "B",   # flake8-bugbear
+  "C90", # McCabe complexity
+  "RUF"
+]
+
+[tool.ruff.format]
+quote-style = "single"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
