@@ -22,6 +22,11 @@ class PrivateKeyInput(BaseModel):
     passphrase: SecretBytes = Field(
         b'', description='Passphrase used to encrypt the private_key, can be optional.', example='my passphrase'
     )
+    model_config = {
+        'json_schema_extra': {
+            'examples': [{'filename_prefix': 'id_rsa', 'key_size': 2048, 'passphrase': 'my passphrase'}]
+        }
+    }
 
     @field_validator('passphrase', mode='before')
     @classmethod
@@ -37,7 +42,7 @@ def validate_domain_name(value: str) -> str:
 
 
 DomainName = Annotated[str, AfterValidator(validate_domain_name)]
-country_form = partial(Form, description='Two letter code of your country', example='FR', min_length=2, max_length=2)
-state_or_province_form = partial(Form, description='the state or province information', example='Ile-de-France')
-city_form = partial(Form, description='the city information', example='Paris')
-organization_form = partial(Form, description='the organization information', example='Organization Inc.')
+country_form = partial(Form, description='Two letter code of your country', examples=['FR'], min_length=2, max_length=2)
+state_or_province_form = partial(Form, description='the state or province information', examples=['Ile-de-France'])
+city_form = partial(Form, description='the city information', examples=['Paris'])
+organization_form = partial(Form, description='the organization information', examples=['Organization Inc.'])

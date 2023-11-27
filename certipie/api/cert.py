@@ -58,7 +58,7 @@ def get_csr(
         Form(
             ...,
             description='The common name of the csr i.e the main domain name you want to provide a certificate.',
-            example='site.com',
+            examples=['site.com'],
         ),
     ],
     alternative_names: Annotated[
@@ -69,7 +69,7 @@ def get_csr(
                 'The list of domain names covered by the certificate. If not provided, defaults to'
                 'the "common_name" value passed as input.'
             ),
-            example=['site.com', 'foo.site.com'],
+            examples=['site.com', 'foo.site.com'],
         ),
     ],
     filename_prefix: Annotated[
@@ -79,7 +79,7 @@ def get_csr(
                 'the prefix of the file created. For example if you pass "csr" you will receive a file "csr.pem". '
                 'If not provided, defaults to "csr".'
             ),
-            example='csr',
+            examples=['csr'],
         ),
     ] = 'csr',
 ):
@@ -137,7 +137,7 @@ def get_auto_certificate(
                 'The list of domain names, ipv4/v6 addresses or networks covered by the certificate. If not '
                 'provided, defaults to "localhost", 127.0.0.1 and ::1.'
             ),
-            example=['192.168.1.1', 'local.com'],
+            examples=['192.168.1.1', 'local.com'],
         ),
     ],
     date_end: Annotated[datetime, Depends(get_date_end)],
@@ -148,7 +148,7 @@ def get_auto_certificate(
                 'the prefix of the file created. For example if you pass "cert" you will receive a file "cert.pem".'
                 ' If not provided, defaults to "cert".'
             ),
-            example='csr',
+            examples=['csr'],
         ),
     ] = 'cert',
     common_name: Annotated[
@@ -159,7 +159,7 @@ def get_auto_certificate(
                 'of an auto-certificate, "localhost" is a valid value and it is the default if this field is not'
                 'provided.'
             ),
-            example='site.com',
+            examples=['site.com'],
         ),
     ] = 'localhost',
 ):
