@@ -2,7 +2,7 @@ import ipaddress
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import AnyStr, Optional, Protocol, Union, runtime_checkable
+from typing import Annotated, AnyStr, Optional, Protocol, Union, runtime_checkable
 
 import idna
 import validators
@@ -20,7 +20,6 @@ from cryptography.hazmat.primitives.serialization import (
 from cryptography.x509 import Certificate, CertificateSigningRequest
 from cryptography.x509.oid import NameOID
 from pydantic import Field, FilePath, validate_call
-from typing_extensions import Annotated
 
 from . import types
 
