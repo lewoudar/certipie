@@ -3,16 +3,16 @@ import shutil
 import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Annotated
+from typing import Annotated, Optional
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from fastapi import Depends, File, Form
-from pydantic import SecretBytes, BeforeValidator
+from pydantic import BeforeValidator, SecretBytes
 
-from .schemas import PrivateKeyInput
 from ..core import get_public_key_from_private_key
 from ..types import PrivateKey
+from .schemas import PrivateKeyInput
 
 
 def delete_tmp_dir(tmp_dir: str) -> None:
