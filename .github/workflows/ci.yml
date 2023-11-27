@@ -24,10 +24,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      - name: Install python dependencies
-        run:
-          - python -m pip install -U pip nox pipx
-          - pipx install poetry
+      - name: Install python pre-requisites
+        run: python -m pip install -U pip nox pipx
+      - name: Install poetry
+        run: pipx install poetry
       - name: Lint
         run: nox -s lint
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
