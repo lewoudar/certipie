@@ -15,6 +15,7 @@ from certipie.core import (
     get_public_key_from_private_key,
     normalize_alternative_name,
 )
+from tests.helpers import assert_pydantic_error
 
 
 class TestCreatePrivateKey:
@@ -25,33 +26,25 @@ class TestCreatePrivateKey:
         with pytest.raises(ValidationError) as exc_info:
             create_private_key(name)  # type: ignore
 
-        message = str(exc_info.value)
-        assert 'type_error' in message
-        assert 'filename' in message
+        assert_pydantic_error(exc_info.value, 'string_type')
 
     def test_should_raise_error_when_filename_length_is_less_than_1(self):
         with pytest.raises(ValidationError) as exc_info:
             create_private_key('')
 
-        message = str(exc_info.value)
-        assert 'filename' in message
-        assert 'min_length' in message
+        assert_pydantic_error(exc_info.value, 'string_too_short')
 
     def test_should_raise_error_when_key_size_is_not_an_integer(self):
         with pytest.raises(ValidationError) as exc_info:
             create_private_key('foo.pem', 'far')  # type: ignore
 
-        message = str(exc_info.value)
-        assert 'key_size' in message
-        assert 'type_error' in message
+        assert_pydantic_error(exc_info.value, 'int_parsing')
 
     def test_should_raise_error_when_key_size_is_less_than_512(self):
         with pytest.raises(ValidationError) as exc_info:
             create_private_key('foo.pem', 30)
 
-        message = str(exc_info.value)
-        assert 'key_size' in message
-        assert 'value_error' in message
+        assert_pydantic_error(exc_info.value, 'greater_than_equal')
 
     @pytest.mark.parametrize('passphrase', [b'bla', 'bla', '', b''])
     def test_should_create_and_return_private_key_given_correct_input(self, tmp_path, passphrase):
@@ -83,17 +76,13 @@ class TestCreateCsr:
         with pytest.raises(ValidationError) as exc_info:
             create_csr(name, 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com')  # type: ignore
 
-        message = str(exc_info)
-        assert 'type_error' in message
-        assert 'filename' in message
+        assert_pydantic_error(exc_info.value, 'string_type')
 
     def test_should_raise_error_when_filename_length_is_less_than_1(self):
         with pytest.raises(ValidationError) as exc_info:
             create_csr('', 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com')  # type: ignore
 
-        message = str(exc_info.value)
-        assert 'filename' in message
-        assert 'min_length' in message
+        assert_pydantic_error(exc_info.value, 'string_too_short')
 
     # common parameter checks
 
@@ -110,9 +99,7 @@ class TestCreateCsr:
         with pytest.raises(ValidationError) as exc_info:
             create_csr('csr.pem', **arguments)
 
-        message = str(exc_info.value)
-        assert list(argument.keys())[0] in message
-        assert 'type_error' in message
+        assert_pydantic_error(exc_info.value, 'string_type')
 
     # common_name checks
 
@@ -120,17 +107,13 @@ class TestCreateCsr:
         with pytest.raises(ValidationError) as exc_info:
             create_csr('csr.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 4)  # type: ignore
 
-        message = str(exc_info.value)
-        assert 'common_name' in message
-        assert 'type_error' in message
+        assert_pydantic_error(exc_info.value, 'string_type')
 
     def test_should_raise_error_when_common_name_length_is_greater_than_255(self):
         with pytest.raises(ValidationError) as exc_info:
             create_csr('csr.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 'a' * 256)
 
-        message = str(exc_info.value)
-        assert 'common_name' in message
-        assert 'max_length' in message
+        assert_pydantic_error(exc_info.value, 'string_too_long')
 
     @pytest.mark.parametrize('domain_name', ['foo', 'foo.', 'foo.o'])
     def test_should_raise_value_error_when_common_name_is_not_a_valid_domain_name(self, domain_name):
@@ -145,9 +128,7 @@ class TestCreateCsr:
         with pytest.raises(ValidationError) as exc_info:
             create_csr('csr.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com', ['foo.com', 'a' * 256])
 
-        message = str(exc_info.value)
-        assert 'alternative_names' in message
-        assert 'max_length' in message
+        assert_pydantic_error(exc_info.value, 'string_too_long')
 
     def test_should_raise_value_error_when_alternative_name_is_not_a_valid_domain_name_1(self):
         alternative_names = ['foo.com', 'foo', 'pie.io', 'foo.']  # 2nd and 4th are incorrect
@@ -180,10 +161,7 @@ class TestCreateCsr:
                 'csr.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com', private_key='unknown_file'
             )
 
-        message = str(exc_info.value)
-
-        assert 'private_key' in message
-        assert 'value_error.path.not_exists' in message
+        assert_pydantic_error(exc_info.value, 'path_not_file', 2)
 
     def test_should_raise_error_when_file_cannot_be_decoded(self, tmp_path):
         key = tmp_path / 'key.pem'
@@ -307,17 +285,13 @@ class TestCreateAutoCertificate:
         with pytest.raises(ValidationError) as exc_info:
             create_auto_certificate(name, 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com')  # type: ignore
 
-        message = str(exc_info.value)
-        assert 'filename' in message
-        assert 'type_error' in message
+        assert_pydantic_error(exc_info.value, 'string_type')
 
     def test_should_raise_error_when_filename_length_is_less_than_1(self):
         with pytest.raises(ValidationError) as exc_info:
             create_auto_certificate('', 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com')
 
-        message = str(exc_info.value)
-        assert 'filename' in message
-        assert 'min_length' in message
+        assert_pydantic_error(exc_info.value, 'string_too_short')
 
     # common parameter checks
 
@@ -335,9 +309,7 @@ class TestCreateAutoCertificate:
         with pytest.raises(ValidationError) as exc_info:
             create_auto_certificate('cert.pem', **arguments)
 
-        message = str(exc_info.value)
-        assert list(argument.keys())[0] in message
-        assert 'type_error' in message
+        assert_pydantic_error(exc_info.value, 'string_type')
 
     # common_name checks
 
@@ -345,17 +317,13 @@ class TestCreateAutoCertificate:
         with pytest.raises(ValidationError) as exc_info:
             create_auto_certificate('cert.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 4)  # type: ignore
 
-        message = str(exc_info.value)
-        assert 'common_name' in message
-        assert 'type_error' in message
+        assert_pydantic_error(exc_info.value, 'string_type')
 
     def test_should_raise_error_when_common_name_length_is_greater_than_255(self):
         with pytest.raises(ValidationError) as exc_info:
             create_auto_certificate('cert.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 'a' * 256)
 
-        message = str(exc_info.value)
-        assert 'common_name' in message
-        assert 'max_length' in message
+        assert_pydantic_error(exc_info.value, 'string_too_long')
 
     @pytest.mark.parametrize('domain_name', ['foo', 'foo.', 'foo.o'])
     def test_should_raise_value_error_when_common_name_is_not_a_valid_domain_name(self, domain_name):
@@ -388,10 +356,7 @@ class TestCreateAutoCertificate:
                 'cert.pem', 'FR', 'Ile-de-France', 'Paris', 'organization', 'site.com', private_key='unknown_file'
             )
 
-        message = str(exc_info.value)
-
-        assert 'private_key' in message
-        assert 'value_error.path.not_exists' in message
+        assert_pydantic_error(exc_info.value, 'path_not_file', 2)
 
     def test_should_raise_error_when_file_cannot_be_decoded(self, tmp_path):
         key = tmp_path / 'key.pem'

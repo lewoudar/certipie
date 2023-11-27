@@ -17,6 +17,12 @@ def test_should_print_error_when_shell_is_not_detected(mocker, runner):
     assert 'unable to detect the current shell\nAborted!\n' == result.output
 
 
+@pytest.mark.skipif(
+    platform.system() == 'Windows',
+    reason='Patching os.name to another value than "nt" makes it impossible for pytest to use the pathlib module. '
+    'pathlib uses os.name to instantiate a WindowsPath or a PosixPath, or if we change it with another value '
+    'than "nt", it will try to instantiate a PosixPath and fail.',
+)
 def test_should_print_error_when_os_name_is_unknown(monkeypatch, runner):
     os_name = 'foo'
     monkeypatch.setattr(os, 'name', os_name)

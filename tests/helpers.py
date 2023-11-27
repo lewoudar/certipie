@@ -1,7 +1,24 @@
 import platform
 from pathlib import Path
+from typing import Any
 
+import pydantic
 import pytest
+from dirty_equals import IsStr, IsPartialDict
+
+
+def assert_pydantic_error(error: pydantic.ValidationError, error_type: str, errors_length: int = 1) -> None:
+    errors = error.errors()
+    assert len(errors) == errors_length
+    assert errors[0]['type'] == error_type
+
+
+def assert_http_error_message(data: dict, input_data: Any, location: list[str], error_type: str) -> None:
+    assert data == {
+        'detail': [
+            IsPartialDict({'input': input_data, 'loc': location, 'msg': IsStr, 'type': error_type, 'url': IsStr})
+        ]
+    }
 
 
 def assert_private_key(paths: list[Path], prefix='id_rsa') -> None:

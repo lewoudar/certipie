@@ -26,14 +26,14 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fastapi = "^0.75.0"
+fastapi = "^0.104.0"
 click = "^8.0.3"
 cryptography = "^36.0.1"
 hypercorn = "^0.13.2"
 idna = "^3.3"
 python-multipart = "^0.0.5"
 click-didyoumean = "^0.3.0"
-click-params = "^0.1.2"
+click-params = "^0.2.0"
 trio = "^0.20.0"
 shellingham = "^1.4.0"
 
@@ -46,11 +46,13 @@ pytest = "^7.0.0"
 pytest-cov = "^3.0.0"
 pytest-mock = "^3.7.0"
 nox = "^2023.4.22"
+dirty-equals = "^0.7.1.post0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.19.0"
-requests = "^2.27.1"
 httpie = "^3.1.0"
+bump-pydantic = "^0.7.0"
+httpx = "^0.25.2"
 
 [tool.poetry.group.audit.dependencies]
 safety = "^1.10.3"
@@ -60,7 +62,7 @@ cert = "certipie.cli.main:cert"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=certipie --cov-report html --cov-report xml --cov-report term"
+# addopts = "--cov=certipie --cov-report html --cov-report xml --cov-report term"
 
 [tool.ruff]
 line-length = 120

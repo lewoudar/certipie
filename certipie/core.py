@@ -1,9 +1,9 @@
 import ipaddress
 import re
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import AnyStr, Protocol, Union, runtime_checkable
+from typing import AnyStr, Optional, Protocol, Union, runtime_checkable
 
 import idna
 from cryptography import x509
@@ -19,14 +19,17 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from cryptography.x509 import Certificate, CertificateSigningRequest
 from cryptography.x509.oid import NameOID
-from pydantic import Field, FilePath, conint, constr, validate_arguments
+from pydantic import Field, FilePath, validate_call
+from typing_extensions import Annotated
 
 from . import types
 
 
-@validate_arguments
+@validate_call
 def create_private_key(
-    filename: constr(strict=True, min_length=1), key_size: conint(ge=512) = 2048, passphrase: AnyStr = b''
+    filename: Annotated[str, Field(strict=True, min_length=1)],
+    key_size: Annotated[int, Field(ge=512)] = 2048,
+    passphrase: bytes = b'',
 ) -> rsa.RSAPrivateKey:
     """Creates an RSA private key given the filename, key size and optional passphrase."""
     key = rsa.generate_private_key(public_exponent=65537, key_size=key_size)
@@ -47,7 +50,7 @@ def create_private_key(
     return key
 
 
-@validate_arguments(config={'arbitrary_types_allowed': True})
+@validate_call(config={'arbitrary_types_allowed': True})
 def get_public_key_from_private_key(file_path: Path, private_key: rsa.RSAPrivateKey) -> None:
     """Retrieves public key from private key file and saves it in a file."""
     with file_path.open('wb') as f:
@@ -111,16 +114,16 @@ def _get_private_key(
         return load_pem_private_key(private_key.read_bytes(), passphrase or None)
 
 
-@validate_arguments(config={'arbitrary_types_allowed': True})
+@validate_call(config={'arbitrary_types_allowed': True})
 def create_csr(
-    filename: constr(strict=True, min_length=1),
-    country: constr(strict=True),
-    state_or_province: constr(strict=True),
-    city: constr(strict=True),
-    organization: constr(strict=True),
-    common_name: constr(strict=True, max_length=255),
-    alternative_names: list[constr(strict=True, max_length=255)] = None,
-    private_key: Union[FilePath, PrivateKey] = None,
+    filename: Annotated[str, Field(strict=True, min_length=1)],
+    country: Annotated[str, Field(strict=True)],
+    state_or_province: Annotated[str, Field(strict=True)],
+    city: Annotated[str, Field(strict=True)],
+    organization: Annotated[str, Field(strict=True)],
+    common_name: Annotated[str, Field(strict=True, max_length=255)],
+    alternative_names: Optional[list[Annotated[str, Field(strict=True, max_length=255)]]] = None,
+    private_key: Optional[Union[FilePath, PrivateKey]] = None,
     passphrase: AnyStr = b'',
 ) -> CertificateSigningRequest:
     """Creates a certificate signing request and eventually an RSA private key if it is not given as input."""
@@ -183,21 +186,21 @@ def normalize_alternative_name(value: str) -> x509.GeneralName:
 
 
 def _default_end_datetime() -> datetime:
-    return datetime.utcnow() + timedelta(days=365)
+    return datetime.now(timezone.utc) + timedelta(days=365)
 
 
-@validate_arguments(config={'arbitrary_types_allowed': True})
+@validate_call(config={'arbitrary_types_allowed': True})
 def create_auto_certificate(
-    filename: constr(strict=True, min_length=1),
-    country: constr(strict=True),
-    state_or_province: constr(strict=True),
-    city: constr(strict=True),
-    organization: constr(strict=True),
-    common_name: constr(strict=True, max_length=255) = 'localhost',
-    alternative_names: list[constr(strict=True)] = None,
-    private_key: Union[FilePath, PrivateKey] = None,
+    filename: Annotated[str, Field(strict=True, min_length=1)],
+    country: Annotated[str, Field(strict=True)],
+    state_or_province: Annotated[str, Field(strict=True)],
+    city: Annotated[str, Field(strict=True)],
+    organization: Annotated[str, Field(strict=True)],
+    common_name: Annotated[str, Field(strict=True, max_length=255, default='localhost')],
+    alternative_names: Optional[list[Annotated[str, Field(strict=True)]]] = None,
+    private_key: Optional[Union[FilePath, PrivateKey]] = None,
     passphrase: AnyStr = b'',
-    end_validity: datetime = Field(default_factory=_default_end_datetime),
+    end_validity: datetime = Field(default_factory=_default_end_datetime),  # noqa: B008
 ) -> Certificate:
     """Creates a self-signed certificate and eventually an RSA private key if it is not given as input."""
     if common_name.lower() != 'localhost' and not is_domain_name(common_name):

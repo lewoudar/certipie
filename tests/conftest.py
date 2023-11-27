@@ -57,9 +57,7 @@ def runner():
 
 
 @pytest.fixture()
-def isolated_path(runner) -> Path:
+def isolated_path(runner, tmp_path) -> Path:
     """Returns a path corresponding to an isolated folder suitable for file testing."""
-    with runner.isolated_filesystem() as d:
-        print(d)
-        print(Path(d))
+    with runner.isolated_filesystem(temp_dir=tmp_path) as d:
         yield Path(d)

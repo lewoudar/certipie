@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import click
 from cryptography.exceptions import UnsupportedAlgorithm
@@ -33,7 +34,7 @@ def csr(
     name: str,
     alt_names: list[str],
     directory: Path,
-    key: str = None,
+    key: Optional[str] = None,
 ):
     """
     Creates a certificate signing request file given user input.
@@ -45,9 +46,17 @@ def csr(
 
     try:
         create_csr(
-            f'{csr_path}', country, state, city, organization, name, alt_names, private_key=key, passphrase=passphrase
+            f'{csr_path}',
+            country,
+            state,
+            city,
+            organization,
+            name,
+            alt_names,
+            private_key=key,
+            passphrase=passphrase.encode() if isinstance(passphrase, str) else passphrase,
         )
     except (ValueError, TypeError, UnsupportedAlgorithm):
-        raise click.UsageError('The key file is not valid or the algorithm used is unsupported.')
+        raise click.UsageError('The key file is not valid or the algorithm used is unsupported.') from None
 
     click.secho(f'The certificate signing request has been successfully created in {directory}', fg='green')
