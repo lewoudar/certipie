@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Optional
 
 import click
 from cryptography.exceptions import UnsupportedAlgorithm
@@ -53,7 +54,7 @@ def auto_certificate(
     alt_names: list[str],
     validity: int,
     directory: Path,
-    key: str = None,
+    key: Optional[str] = None,
 ):
     """
     Creates a self-signed certificate useful for tests.
@@ -74,10 +75,10 @@ def auto_certificate(
             name,
             alt_names,
             private_key=key,
-            passphrase=passphrase,
+            passphrase=passphrase.encode() if isinstance(passphrase, str) else passphrase,
             end_validity=end_date,
         )
     except (ValueError, TypeError, UnsupportedAlgorithm):
-        raise click.UsageError('The key file is not valid or the algorithm used is unsupported.')
+        raise click.UsageError('The key file is not valid or the algorithm used is unsupported.') from None
 
     click.secho(f'The self-signed certificate has been successfully created in {directory}', fg='green')

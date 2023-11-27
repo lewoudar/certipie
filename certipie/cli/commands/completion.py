@@ -1,3 +1,4 @@
+# ruff: noqa: S602
 import subprocess  # nosec
 from pathlib import Path
 
@@ -26,7 +27,7 @@ def install_bash_zsh(bash: bool = True) -> None:
         result = subprocess.run(command, shell=True, capture_output=True, check=True)  # nosec
     except subprocess.CalledProcessError:
         click.secho('unable to get completion script for cert cli.', fg='red')
-        raise click.Abort()
+        raise click.Abort() from None
 
     completion_script = completion_dir / f'cert-complete.{shell}'
     completion_script.write_text(result.stdout.decode())
@@ -47,7 +48,7 @@ def install_fish() -> None:
         result = subprocess.run(command, shell=True, capture_output=True, check=True)  # nosec
     except subprocess.CalledProcessError:
         click.secho('unable to get completion script for cert cli.', fg='red')
-        raise click.Abort()
+        raise click.Abort() from None
 
     completion_script = completion_dir / 'cert.fish'
     completion_script.write_text(result.stdout.decode())
@@ -72,10 +73,10 @@ def install_completion():
         shell, _ = shellingham.detect_shell()
     except shellingham.ShellDetectionFailure:
         click.secho('unable to detect the current shell', fg='red')
-        raise click.Abort()
+        raise click.Abort() from None
     except RuntimeError as e:
         click.echo(f'[error]{e}')
-        raise click.Abort()
+        raise click.Abort() from None
 
     if shell not in SHELLS:
         click.secho(f'Your shell is not supported. Shells supported are: {", ".join(SHELLS)}')

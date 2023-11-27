@@ -5,7 +5,7 @@ import nox
 
 nox.options.reuse_existing_virtualenvs = True
 
-PYTHON_VERSIONS = ['3.9', '3.10']
+PYTHON_VERSIONS = ['3.9', '3.10', '3.11', '3.12']
 CI_ENVIRONMENT = 'GITHUB_ACTIONS' in os.environ
 
 
@@ -13,25 +13,22 @@ CI_ENVIRONMENT = 'GITHUB_ACTIONS' in os.environ
 def lint(session):
     """Performs pep8 and security checks."""
     source_code = 'certipie'
-    session.install('flake8==4.0.1', 'bandit==1.7.2', 'black==22.3.0')
-    session.run('flake8', source_code)
+    session.run('poetry', 'install', '--only', 'lint')
+    session.run('ruff', 'check', source_code)
     session.run('bandit', '-r', source_code)
-    session.run('black', source_code, 'tests', '--check')
 
 
 @nox.session(python=PYTHON_VERSIONS[-1])
 def safety(session):
     """Checks vulnerabilities of the installed packages."""
-    session.install('poetry>=1.0.0,<2.0.0')
-    session.run('poetry', 'install')
+    session.run('poetry', 'install', '--only', 'audit')
     session.run('safety', 'check')
 
 
 @nox.session(python=PYTHON_VERSIONS)
 def tests(session):
     """Runs the test suite."""
-    session.install('poetry>=1.0.0,<2.0.0')
-    session.run('poetry', 'install')
+    session.run('poetry', 'install', '--with', 'test')
     session.run('pytest')
 
 
@@ -40,7 +37,6 @@ def deploy(session):
     """
     Deploys on pypi.
     """
-    session.install('poetry>=1.0.0,<2.0.0')
     if 'POETRY_PYPI_TOKEN_PYPI' not in os.environ:
         session.error('you must specify your pypi token api to deploy your package')
 

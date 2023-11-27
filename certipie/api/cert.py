@@ -3,7 +3,7 @@ import logging
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Annotated, Literal, Optional, Union
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import APIRouter, BackgroundTasks, Depends, Form
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post('/private-key', responses={200: {'content': {'application/zip': {}}}})
-def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: PrivateKeyInput = Depends(get_pk_info)):
+def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: Annotated[PrivateKeyInput, Depends(get_pk_info)]):
     """Creates a zip file containing an RSA private key with his public counterpart."""
     tmp_dir = tempfile.mkdtemp()
     tmp_path = Path(tmp_dir)
@@ -47,33 +47,41 @@ def get_rsa_private_key(background_tasks: BackgroundTasks, pk_info: PrivateKeyIn
 @router.post('/csr', responses={200: {'content': {'application/zip': {}}}})
 def get_csr(
     background_tasks: BackgroundTasks,
-    private_key: Optional[PrivateKey] = Depends(get_private_key),
-    passphrase: bytes = Depends(get_passphrase),
-    filename_prefix: str = Form(
-        'csr',
-        description=(
-            'the prefix of the file created. For example if you pass "csr" you will receive a file "csr.pem". '
-            'If not provided, defaults to "csr".'
+    private_key: Annotated[Optional[PrivateKey], Depends(get_private_key)],
+    passphrase: Annotated[bytes, Depends(get_passphrase)],
+    country: Annotated[str, country_form(...)],
+    state_or_province: Annotated[str, state_or_province_form(...)],
+    city: Annotated[str, city_form(...)],
+    organization: Annotated[str, organization_form(...)],
+    common_name: Annotated[
+        DomainName,
+        Form(
+            ...,
+            description='The common name of the csr i.e the main domain name you want to provide a certificate.',
+            examples=['site.com'],
         ),
-        example='csr',
-    ),
-    country: str = country_form(...),
-    state_or_province: str = state_or_province_form(...),
-    city: str = city_form(...),
-    organization: str = organization_form(...),
-    common_name: DomainName = Form(
-        ...,
-        description='The common name of the csr i.e the main domain name you want to provide a certificate.',
-        example='site.com',
-    ),
-    alternative_names: Optional[list[DomainName]] = Form(
-        [],
-        description=(
-            'The list of domain names covered by the certificate. If not provided, defaults to'
-            'the "common_name" value passed as input.'
+    ],
+    alternative_names: Annotated[
+        list[DomainName],
+        Form(
+            default_factory=list,
+            description=(
+                'The list of domain names covered by the certificate. If not provided, defaults to'
+                'the "common_name" value passed as input.'
+            ),
+            examples=['site.com', 'foo.site.com'],
         ),
-        example=['site.com', 'foo.site.com'],
-    ),
+    ],
+    filename_prefix: Annotated[
+        str,
+        Form(
+            description=(
+                'the prefix of the file created. For example if you pass "csr" you will receive a file "csr.pem". '
+                'If not provided, defaults to "csr".'
+            ),
+            examples=['csr'],
+        ),
+    ] = 'csr',
 ):
     """
     Generates a certificate signing request given input data and returns it in a zip file.
@@ -115,38 +123,45 @@ AlternativeNameType = Union[
 @router.post('/auto-certificate', responses={200: {'content': {'application/zip': {}}}})
 def get_auto_certificate(
     background_tasks: BackgroundTasks,
-    private_key: Optional[rsa.RSAPrivateKey] = Depends(get_private_key),
-    passphrase: bytes = Depends(get_passphrase),
-    filename_prefix: str = Form(
-        'cert',
-        description=(
-            'the prefix of the file created. For example if you pass "cert" you will receive a file "cert.pem".'
-            ' If not provided, defaults to "cert".'
+    private_key: Annotated[Optional[rsa.RSAPrivateKey], Depends(get_private_key)],
+    passphrase: Annotated[bytes, Depends(get_passphrase)],
+    country: Annotated[str, country_form(...)],
+    state_or_province: Annotated[str, state_or_province_form(...)],
+    city: Annotated[str, city_form(...)],
+    organization: Annotated[str, organization_form(...)],
+    alternative_names: Annotated[
+        list[AlternativeNameType],
+        Form(
+            default_factory=lambda: ['localhost', '127.0.0.1', '::1'],
+            description=(
+                'The list of domain names, ipv4/v6 addresses or networks covered by the certificate. If not '
+                'provided, defaults to "localhost", 127.0.0.1 and ::1.'
+            ),
+            examples=['192.168.1.1', 'local.com'],
         ),
-        example='csr',
-    ),
-    country: str = country_form(...),
-    state_or_province: str = state_or_province_form(...),
-    city: str = city_form(...),
-    organization: str = organization_form(...),
-    common_name: Union[Literal['localhost'], DomainName] = Form(
-        'localhost',
-        description=(
-            'The common name of the csr i.e the main domain name you want to provide a certificate. In case'
-            'of an auto-certificate, "localhost" is a valid value and it is the default if this field is not'
-            'provided.'
+    ],
+    date_end: Annotated[datetime, Depends(get_date_end)],
+    filename_prefix: Annotated[
+        str,
+        Form(
+            description=(
+                'the prefix of the file created. For example if you pass "cert" you will receive a file "cert.pem".'
+                ' If not provided, defaults to "cert".'
+            ),
+            examples=['csr'],
         ),
-        example='site.com',
-    ),
-    alternative_names: Optional[list[AlternativeNameType]] = Form(
-        ['localhost', '127.0.0.1', '::1'],
-        description=(
-            'The list of domain names, ipv4/v6 addresses or networks covered by the certificate. If not '
-            'provided, defaults to "localhost", 127.0.0.1 and ::1.'
+    ] = 'cert',
+    common_name: Annotated[
+        Union[Literal['localhost'], DomainName],
+        Form(
+            description=(
+                'The common name of the csr i.e the main domain name you want to provide a certificate. In case'
+                'of an auto-certificate, "localhost" is a valid value and it is the default if this field is not'
+                'provided.'
+            ),
+            examples=['site.com'],
         ),
-        example=['192.168.1.1', 'local.com'],
-    ),
-    date_end: datetime = Depends(get_date_end),
+    ] = 'localhost',
 ):
     """
     Generates a self-signed certificate you can use for testing and development purposes.

@@ -16,7 +16,8 @@ class IpModel(pydantic.BaseModel):
 class HostModel(pydantic.BaseModel):
     host: Union[Literal['localhost'], ipaddress.IPv6Address, ipaddress.IPv4Address]
 
-    @pydantic.validator('host', pre=True)
+    @pydantic.field_validator('host', mode='before')
+    @classmethod
     def lower_value(cls, value: str) -> str:
         return value.lower()
 
@@ -47,7 +48,7 @@ def validate_host(ctx, param, value: str) -> str:
         HostModel(host=value)
         return value
     except pydantic.ValidationError:
-        raise click.BadParameter(f'{value} is neither "localhost" nor a valid ip address')
+        raise click.BadParameter(f'{value} is neither "localhost" nor a valid ip address') from None
 
 
 # we don't use DomainParamType provided by click_params because it doesn't handle wildcards

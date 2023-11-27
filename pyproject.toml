@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "certipie"
-version = "0.2.0"
+version = "0.3.0"
 description = "A tool to create certificate signing request and self-signed certificates"
 authors = ["le_woudar <lewoudar@gmail.com>"]
 readme = "README.md"
@@ -26,45 +26,60 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fastapi = "^0.75.0"
+fastapi = "^0.104.0"
 click = "^8.0.3"
-cryptography = "^36.0.1"
+cryptography = "^41.0.5"
 hypercorn = "^0.13.2"
 idna = "^3.3"
 python-multipart = "^0.0.5"
 click-didyoumean = "^0.3.0"
-click-params = "^0.1.2"
+click-params = "^0.5.0"
 trio = "^0.20.0"
 shellingham = "^1.4.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.lint.dependencies]
+bandit = "^1.7.4"
+ruff = "^0.1.6"
+
+[tool.poetry.group.test.dependencies]
 pytest = "^7.0.0"
 pytest-cov = "^3.0.0"
-bandit = "^1.7.2"
-flake8 = "^4.0.1"
 pytest-mock = "^3.7.0"
-requests = "^2.27.1"
-httpie = "^3.1.0"
-nox = "^2022.1.7"
+nox = "^2023.4.22"
+dirty-equals = "^0.7.1.post0"
+
+[tool.poetry.group.dev.dependencies]
 pre-commit = "^2.19.0"
-black = "^22.3.0"
-isort = "^5.10.1"
-safety = "^1.10.3"
+httpie = "^3.1.0"
+bump-pydantic = "^0.7.0"
+httpx = "^0.25.2"
+
+[tool.poetry.group.audit.dependencies]
+safety = "^2.3.5"
 
 [tool.poetry.scripts]
 cert = "certipie.cli.main:cert"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=certipie --cov-report html --cov-report xml"
+addopts = "--cov=certipie --cov-report html --cov-report xml --cov-report term"
 
-[tool.isort]
-line_length = 120
-profile = "black"
-
-[tool.black]
+[tool.ruff]
 line-length = 120
-skip-string-normalization = true
+target-version = "py38"
+
+[tool.ruff.lint]
+extend-select = [
+  "UP",  # pyupgrade
+  "I",   # isort
+  "S",   # flake8-bandit
+  "B",   # flake8-bugbear
+  "C90", # McCabe complexity
+  "RUF"
+]
+
+[tool.ruff.format]
+quote-style = "single"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

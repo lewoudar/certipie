@@ -1,10 +1,11 @@
 # certipie
 
 [![Pypi version](https://img.shields.io/pypi/v/certipie.svg)](https://pypi.org/project/certipie/)
-![](https://github.com/lewoudar/certipie/workflows/CI/badge.svg)
+[![](https://github.com/lewoudar/certipie/workflows/CI/badge.svg)](https://github.com/lewoudar/certipie/actions/)
 [![Coverage Status](https://codecov.io/gh/lewoudar/certipie/branch/main/graphs/badge.svg?branch=main)](https://codecov.io/gh/lewoudar/certipie)
-[![Code Style](https://img.shields.io/badge/code%20style-black-black)](https://github.com/lewoudar/certipie)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/lewoudar/certipie)
 [![License Apache 2](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://github.com/lewoudar/certipie)
 
 A utility library to create certificate signing request and self-signed certificates.
 
@@ -207,15 +208,15 @@ Here is a snippet on how to create a certificate signing request using `create_c
 from certipie import create_csr
 
 create_csr(
-  'csr.pem',
-  'FR',
-  'Ile-de-France',
-  'Paris',
-  'organization',
-  'site.com',
-  alternative_names=['site.com', 'foo.site.com'],
-  private_key='key.pem',
-  passphrase='passphrase'
+    'csr.pem',
+    'FR',
+    'Ile-de-France',
+    'Paris',
+    'organization',
+    'site.com',
+    alternative_names=['site.com', 'foo.site.com'],
+    private_key='key.pem',
+    passphrase='passphrase'
 )
 ```
 

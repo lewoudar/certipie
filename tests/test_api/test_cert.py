@@ -1,9 +1,10 @@
 import logging
 
 import pytest
+from dirty_equals import IsStr, Contains
 
 from certipie.core import create_private_key
-from tests.helpers import assert_cert, assert_csr, assert_private_key
+from tests.helpers import assert_cert, assert_csr, assert_private_key, assert_http_error_message
 
 
 class TestPrivateKey:
@@ -13,26 +14,15 @@ class TestPrivateKey:
         r = client.post('/certs/private-key', json={'key_size': 'foo'})
 
         assert r.status_code == 422
-        assert r.json() == {
-            'detail': [
-                {'loc': ['body', 'key_size'], 'msg': 'value is not a valid integer', 'type': 'type_error.integer'}
-            ]
-        }
+        assert_http_error_message(r.json(), 'foo', ['body', 'key_size'], 'int_parsing')
 
     def test_should_return_error_when_key_size_is_less_than_512(self, client):
         r = client.post('/certs/private-key', json={'key_size': 40})
 
         assert r.status_code == 422
-        assert r.json() == {
-            'detail': [
-                {
-                    'loc': ['body', 'key_size'],
-                    'msg': 'ensure this value is greater than or equal to 512',
-                    'type': 'value_error.number.not_ge',
-                    'ctx': {'limit_value': 512},
-                }
-            ]
-        }
+        data = r.json()
+        assert_http_error_message(data, 40, ['body', 'key_size'], 'greater_than_equal')
+        assert data['detail'][0]['ctx'] == {'ge': 512}
 
     def test_should_create_pair_of_keys_without_payload(self, caplog, client, tmp_path, unzip_file):
         caplog.set_level(logging.INFO)
@@ -43,7 +33,6 @@ class TestPrivateKey:
 
         paths = unzip_file(r.content, tmp_path)
         assert_private_key(paths)
-        assert len(caplog.records) == 1
         assert 'returns a zip file' in caplog.records[0].getMessage()
 
     @pytest.mark.parametrize(
@@ -87,9 +76,7 @@ class TestCommonCertificateError:
         r = client.post(f'/certs/{url_path}', data=base_payload)
 
         assert r.status_code == 422
-        assert r.json() == {
-            'detail': [{'loc': ['body', field], 'msg': 'field required', 'type': 'value_error.missing'}]
-        }
+        assert_http_error_message(r.json(), None, ['body', field], 'missing')
 
     @pytest.mark.parametrize('country', ['C', 'CAM'])
     @pytest.mark.parametrize('url_path', ['csr', 'auto-certificate'])
@@ -100,18 +87,11 @@ class TestCommonCertificateError:
         r = client.post(f'/certs/{url_path}', data=base_payload)
 
         assert r.status_code == 422
-        adjective = 'least' if country == 'C' else 'most'
-        error_type = 'value_error.any_str.min_length' if country == 'C' else 'value_error.any_str.max_length'
-        assert r.json() == {
-            'detail': [
-                {
-                    'loc': ['body', 'country'],
-                    'msg': f'ensure this value has at {adjective} 2 characters',
-                    'type': error_type,
-                    'ctx': {'limit_value': 2},
-                }
-            ]
-        }
+        data = r.json()
+        error_type = 'string_too_short' if country == 'C' else 'string_too_long'
+        context = 'min_length' if country == 'C' else 'max_length'
+        assert_http_error_message(data, country, ['body', 'country'], error_type)
+        assert data['detail'][0]['ctx'] == {context: 2}
 
     @pytest.mark.parametrize('domain', ['4', 'foo'])
     @pytest.mark.parametrize('url_path', ['csr', 'auto-certificate'])
@@ -119,17 +99,36 @@ class TestCommonCertificateError:
         base_payload['common_name'] = domain
         r = client.post(f'/certs/{url_path}', data=base_payload)
 
-        errors = [
-            {
-                'ctx': {'given': f'{domain}', 'permitted': ['localhost']},
-                'loc': ['body', 'common_name'],
-                'msg': "unexpected value; permitted: 'localhost'",
-                'type': 'value_error.const',
-            },
-            {'loc': ['body', 'common_name'], 'msg': 'not a valid domain name', 'type': 'value_error'},
-        ]
         if url_path == 'csr':
-            del errors[0]
+            errors = [
+                {
+                    'ctx': {'error': {}},
+                    'input': domain,
+                    'loc': ['body', 'common_name'],
+                    'msg': IsStr,
+                    'type': 'value_error',
+                    'url': IsStr,
+                }
+            ]
+        else:
+            errors = [
+                {
+                    'ctx': {'expected': "'localhost'"},
+                    'input': domain,
+                    'loc': ['body', 'common_name', "literal['localhost']"],
+                    'msg': IsStr,
+                    'type': 'literal_error',
+                    'url': IsStr,
+                },
+                {
+                    'ctx': {'error': {}},
+                    'input': domain,
+                    'loc': ['body', 'common_name', 'function-after[validate_domain_name(), str]'],
+                    'msg': IsStr,
+                    'type': 'value_error',
+                    'url': IsStr,
+                },
+            ]
 
         assert r.status_code == 422
         assert r.json() == {'detail': errors}
@@ -154,11 +153,7 @@ class TestCsr:
         r = client.post('/certs/csr', data=base_payload)
 
         assert r.status_code == 422
-        assert r.json() == {
-            'detail': [
-                {'loc': ['body', 'alternative_names', 1], 'msg': 'not a valid domain name', 'type': 'value_error'}
-            ]
-        }
+        assert_http_error_message(r.json(), domain, ['body', 'alternative_names', 1], 'value_error')
 
     @pytest.mark.parametrize('default_filename', [True, False])
     @pytest.mark.parametrize('default_alternative_names', [True, False])
@@ -211,7 +206,6 @@ class TestCsr:
         paths = unzip_file(r.content, tmp_path)
         assert len(paths) == 1
         assert_csr(paths, 'my_csr')
-        assert len(caplog.records) == 1
         assert 'returns a zip file' in caplog.records[0].getMessage()
 
 
@@ -226,32 +220,73 @@ class TestAutoCertificate:
         assert r.status_code == 422
         assert r.json() == {
             'detail': [
-                {'loc': ['body', 'alternative_names', 1], 'msg': 'not a valid domain name', 'type': 'value_error'},
                 {
-                    'loc': ['body', 'alternative_names', 1],
-                    'msg': 'value is not a valid IPv4 address',
-                    'type': 'value_error.ipv4address',
+                    'ctx': {'error': {}},
+                    'input': domain,
+                    'loc': ['body', 'alternative_names', 1, 'function-after[validate_domain_name(), str]'],
+                    'msg': IsStr & Contains('not a valid domain name'),
+                    'type': 'value_error',
+                    'url': IsStr,
                 },
                 {
-                    'loc': ['body', 'alternative_names', 1],
-                    'msg': 'value is not a valid IPv6 address',
-                    'type': 'value_error.ipv6address',
+                    'input': domain,
+                    'loc': [
+                        'body',
+                        'alternative_names',
+                        1,
+                        'lax-or-strict[lax=function-plain[ip_v4_address_validator()],'
+                        'strict=json-or-python[json=function-after[IPv4Address(), '
+                        'str],python=is-instance[IPv4Address]]]',
+                    ],
+                    'msg': IsStr,
+                    'type': 'ip_v4_address',
                 },
                 {
-                    'loc': ['body', 'alternative_names', 1],
-                    'msg': 'value is not a valid IPv4 network',
-                    'type': 'value_error.ipv4network',
+                    'input': domain,
+                    'loc': [
+                        'body',
+                        'alternative_names',
+                        1,
+                        'lax-or-strict[lax=function-plain[ip_v6_address_validator()],'
+                        'strict=json-or-python[json=function-after[IPv6Address(), '
+                        'str],python=is-instance[IPv6Address]]]',
+                    ],
+                    'msg': IsStr,
+                    'type': 'ip_v6_address',
                 },
                 {
-                    'loc': ['body', 'alternative_names', 1],
-                    'msg': 'value is not a valid IPv6 network',
-                    'type': 'value_error.ipv6network',
+                    'input': domain,
+                    'loc': [
+                        'body',
+                        'alternative_names',
+                        1,
+                        'lax-or-strict[lax=function-plain[ip_v4_network_validator()],'
+                        'strict=json-or-python[json=function-after[IPv4Network(), '
+                        'str],python=is-instance[IPv4Network]]]',
+                    ],
+                    'msg': IsStr,
+                    'type': 'ip_v4_network',
                 },
                 {
-                    'loc': ['body', 'alternative_names', 1],
-                    'msg': "unexpected value; permitted: 'localhost'",
-                    'type': 'value_error.const',
-                    'ctx': {'given': f'{domain}', 'permitted': ['localhost']},
+                    'input': domain,
+                    'loc': [
+                        'body',
+                        'alternative_names',
+                        1,
+                        'lax-or-strict[lax=function-plain[ip_v6_network_validator()],'
+                        'strict=json-or-python[json=function-after[IPv6Network(), '
+                        'str],python=is-instance[IPv6Network]]]',
+                    ],
+                    'msg': IsStr,
+                    'type': 'ip_v6_network',
+                },
+                {
+                    'ctx': {'expected': "'localhost'"},
+                    'input': domain,
+                    'loc': ['body', 'alternative_names', 1, "literal['localhost']"],
+                    'msg': IsStr,
+                    'type': 'literal_error',
+                    'url': IsStr,
                 },
             ]
         }
@@ -322,5 +357,4 @@ class TestAutoCertificate:
 
         paths = unzip_file(r.content, tmp_path)
         assert_cert(paths, 'certificate')
-        assert len(caplog.records) == 1
         assert 'returns a zip file' in caplog.records[0].getMessage()
